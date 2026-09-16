@@ -100,7 +100,7 @@ function App() {
             {renderView()}
           </div>
           <div className="px-8 lg:px-16 py-8">
-            <RightPane data={latest} />
+            <RightPane data={latest} history={telemetryData} />
           </div>
         </div>
       </div>
