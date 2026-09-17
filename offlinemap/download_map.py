@@ -19,8 +19,8 @@ METERS_PER_DEGREE = 111111.0
 
 # Zoom levels:
 # 10 = regional view, 15 = high detail, 16 = very high detail
-MIN_ZOOM = 10
-MAX_ZOOM = 15
+MIN_ZOOM = 11
+MAX_ZOOM = 16
 
 # Terrain (elevation) tiles are much coarser than imagery. AWS Terrarium tiles
 # top out at zoom 15 globally, but for most terrain-mesh purposes zoom 12-13
