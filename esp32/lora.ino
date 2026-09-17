@@ -5,10 +5,10 @@
 // Change these values if your wiring uses different GPIOs.
 constexpr int LORA_SCK = 18;
 constexpr int LORA_MISO = 19;
-constexpr int LORA_MOSI = 23;
+constexpr int LORA_MOSI = 21;
 constexpr int LORA_SS = 5;
 constexpr int LORA_RESET = 14;
-constexpr int LORA_DIO0 = 26;
+constexpr int LORA_DIO0 = 2;
 
 // The inAir9B must use the same frequency as the rocket transmitter.
 // Select 915E6 for the 902-928 MHz version or 868E6 for the 863-870 MHz version.
@@ -51,6 +51,7 @@ void setup() {
 	while (!Serial) {
 		delay(10);
 	}
+	Serial.println("Starting LoRa setup...");
 
 	SPI.begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_SS);
 	LoRa.setPins(LORA_SS, LORA_RESET, LORA_DIO0);
@@ -61,6 +62,7 @@ void setup() {
 			delay(1000);
 		}
 	}
+	Serial.println("LoRa setup complete.");
 
 	LoRa.enableCrc();
 	LoRa.receive();
