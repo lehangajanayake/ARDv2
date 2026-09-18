@@ -11,7 +11,7 @@ RADIO_FREQ_MHZ = 915.0
 DEBUG = True
 
 # Define pins connected to the Pi
-CS = digitalio.DigitalInOut(board.CE1)
+CS = digitalio.DigitalInOut(board.CE0)
 RESET = digitalio.DigitalInOut(board.D25)
 
 SAMPLE_INTERVAL_SECONDS = 0.25
