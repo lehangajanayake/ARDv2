@@ -8,6 +8,7 @@ import adafruit_rfm9x
 
 # Define the radio frequency (Must match your hardware: 915.0 or 868.0)
 RADIO_FREQ_MHZ = 915.0 
+DEBUG = True
 
 # Define pins connected to the Pi
 CS = digitalio.DigitalInOut(board.CE1)
@@ -27,6 +28,9 @@ try:
     # Initialize the RFM9x radio
     rfm9x = adafruit_rfm9x.RFM9x(spi, CS, RESET, RADIO_FREQ_MHZ)
     print("RFM9x LoRa Initialized Successfully!")
+    if DEBUG:
+        print(f"[DEBUG] Frequency: {RADIO_FREQ_MHZ} MHz")
+        print(f"[DEBUG] Transmit power: {rfm9x.tx_power} dBm")
 except RuntimeError as error:
     print(f"Error initializing LoRa: {error}")
     print("Check your wiring and SPI interface.")
@@ -83,6 +87,7 @@ def simulated_packet(time_ms, elapsed_seconds):
 print("Transmitting simulated telemetry...")
 flight_start_time = time.monotonic()
 next_sample_time = flight_start_time
+packet_count = 0
 
 while True:
     now = time.monotonic()
@@ -90,8 +95,24 @@ while True:
         elapsed_seconds = now - flight_start_time
         time_ms = int(elapsed_seconds * 1000)
         packet_text = simulated_packet(time_ms, elapsed_seconds)
-        rfm9x.send(packet_text.encode("ascii"))
-        print(f"Sent: {packet_text}")
+        packet = packet_text.encode("ascii")
+        packet_count += 1
+
+        if DEBUG:
+            print(
+                f"[DEBUG] Packet {packet_count}: "
+                f"elapsed={elapsed_seconds:.3f}s, "
+                f"time={time_ms}ms, bytes={len(packet)}"
+            )
+
+        try:
+            rfm9x.send(packet)
+            print(f"Sent: {packet_text}")
+            if DEBUG:
+                print(f"[DEBUG] Packet {packet_count} transmitted successfully")
+        except RuntimeError as error:
+            print(f"[DEBUG] Packet {packet_count} transmit failed: {error}")
+
         next_sample_time += SAMPLE_INTERVAL_SECONDS
     else:
         time.sleep(next_sample_time - now)
