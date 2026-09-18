@@ -13,4 +13,3 @@ try:
     print("RFM9x initialized successfully")
 except Exception:
     traceback.print_exc()
-PY
