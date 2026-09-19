@@ -17,7 +17,6 @@ import {
   parseSradTelemetry,
 } from "@/serialParsers";
 import { DEFAULT_CONFIG } from "@/config";
-// import { startMockTelemetry } from "@/mock";
 
 type SettingsPageProps = {
   portStatus: STATUS;
@@ -26,6 +25,8 @@ type SettingsPageProps = {
   setTelemetryData: React.Dispatch<React.SetStateAction<Telemetry[]>>;
   launchSite: [number, number];
   setLaunchSite: React.Dispatch<React.SetStateAction<[number, number]>>;
+  targetHeight: number;
+  setTargetHeight: React.Dispatch<React.SetStateAction<number>>;
 };
 
 export default function SettingsPage({
@@ -35,6 +36,8 @@ export default function SettingsPage({
   setTelemetryData,
   launchSite,
   setLaunchSite,
+  targetHeight,
+  setTargetHeight,
 }: SettingsPageProps) {
   const [ports, setPorts] = useState<SerialPort[]>([]);
   const [selectedPort, setSelectedPort] = useState<SerialPort | null>(null);
@@ -54,34 +57,23 @@ export default function SettingsPage({
   const [launchLongitude, setLaunchLongitude] = useState(String(launchSite[0]));
   const [launchLatitude, setLaunchLatitude] = useState(String(launchSite[1]));
   const [launchSiteMessage, setLaunchSiteMessage] = useState("");
+  const [maxHeightInput, setMaxHeightInput] = useState(String(targetHeight));
+  const [maxHeightMessage, setMaxHeightMessage] = useState("");
   const readerRef = useRef<ReadableStreamDefaultReader | null>(null); 
   const websocketRef = useRef<WebSocket | null>(null);
   const websocketBufferRef = useRef("");
   const streamStartTimeRef = useRef<number>(0);
   const replayTimerRef = useRef<number | null>(null);
 
-  // MOCK data
-  /*
-    useEffect(() => {
-      const stopMock = startMockTelemetry((packet) => {
-        setTelemetryData((prev) => [...prev, packet]);
-      });
-  
-      return () => stopMock(); // Cleanup on unmount
-    }, []);
-  */
-
-  // Check if "connected" or not
   const isConnected = portStatus === STATUS.CONNECTED;
   const loadPorts = useCallback(async () => {
     try {
       console.log("INFO: Requesting serial ports");
       
-      // Request the user to select a port
       const port = await navigator.serial.requestPort();
   
       if (port) {
-        setPorts([port]); // Store in state
+        setPorts([port]); 
         setPortStatus(STATUS.AWAITING);
         console.log("Selected port:", port);
       }
@@ -98,7 +90,6 @@ export default function SettingsPage({
     setSelectedPort(portObj || null);
   };
 
-  // Opens the selected port, reads CSV lines, and updates telemetry data
   const connectPort = useCallback(async () => {
     if (!selectedPort) return;
     try {
@@ -112,23 +103,20 @@ export default function SettingsPage({
         console.log("ERROR: No reader available");
         return;
       }
-      readerRef.current = reader; // Store reader in ref
+      readerRef.current = reader; 
 
       let buffer = "";
       while (true) {
         const { value, done } = await reader.read();
         if (done || !value) break;
 
-        // Convert incoming bytes to string
         buffer += new TextDecoder().decode(value);
 
-        // Split on newlines; keep last partial line in buffer
         const lines = buffer.split("\n");
         buffer = lines.pop() || "";
 
         setRawData((prev) => prev + buffer);
 
-        // Decode each complete line into the shared telemetry shape.
         for (const line of lines) {
           const packet = dataSource === "srad"
             ? parseSradTelemetry(line)
@@ -201,7 +189,6 @@ export default function SettingsPage({
     }
   }, [dataSource, setPortStatus, setTelemetryData, websocketUrl]);
 
-  // Closes the port
   const disconnectPort = useCallback(async () => {
     if (transport === "websocket") {
       websocketRef.current?.close();
@@ -243,6 +230,18 @@ export default function SettingsPage({
 
     setLaunchSite([longitude, latitude]);
     setLaunchSiteMessage("Launch site updated.");
+  };
+
+  const applyMaxHeight = () => {
+    const height = Number(maxHeightInput);
+
+    if (!Number.isFinite(height) || height <= 0) {
+      setMaxHeightMessage("Enter a valid height in meters.");
+      return;
+    }
+
+    setTargetHeight(height);
+    setMaxHeightMessage("Max height updated.");
   };
 
   const exportTelemetryCsv = () => {
@@ -389,6 +388,31 @@ export default function SettingsPage({
         </Button>
         {launchSiteMessage && (
           <p className="mt-2 text-sm text-slate-300">{launchSiteMessage}</p>
+        )}
+      </div>
+
+      <div className="mb-6 rounded bg-slate-900/70 p-4 text-white">
+        <p className="mb-3 font-semibold">Max height</p>
+        <label className="text-sm">
+          Target height (m)
+          <input
+            type="number"
+            min="0"
+            step="any"
+            value={maxHeightInput}
+            onChange={(event) => setMaxHeightInput(event.target.value)}
+            className="mt-1 w-full rounded border border-slate-400 px-3 py-2 text-black"
+          />
+        </label>
+        <Button
+          type="button"
+          onClick={applyMaxHeight}
+          className="mt-3 bg-yellow-500 text-white hover:bg-yellow-600"
+        >
+          Apply max height
+        </Button>
+        {maxHeightMessage && (
+          <p className="mt-2 text-sm text-slate-300">{maxHeightMessage}</p>
         )}
       </div>
 
@@ -558,7 +582,6 @@ export default function SettingsPage({
           Clear ports
         </Button>
         <Button
-          // onClick={isConnected ? disconnectPort : startMockTelemetry} // NOTE: for mock data
           onClick={isConnected
             ? disconnectPort
             : transport === "websocket"

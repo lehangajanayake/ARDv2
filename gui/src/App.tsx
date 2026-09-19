@@ -11,7 +11,6 @@ import { DEFAULT_CONFIG } from "./config";
 import backgroundImageFile from '@/assets/background-cropped.png';
 
 function App() {
-  // Shared data
   const [page, setPage] = useState<PAGE>(PAGE.TELEMETRY);
   const [portStatus, setPortStatus] = useState<STATUS>(STATUS.DISCONNECTED);
   const [telemetryData, setTelemetryData] = useState<Telemetry[]>([
@@ -21,6 +20,7 @@ function App() {
     DEFAULT_CONFIG.launchSite.longitude,
     DEFAULT_CONFIG.launchSite.latitude,
   ]);
+  const [targetHeight, setTargetHeight] = useState<number>(6096); 
 
   const latest =
     telemetryData[telemetryData.length - 1] || DEFAULT_TELEMETRY_DATA;
@@ -36,6 +36,8 @@ function App() {
       setTelemetryData={setTelemetryData}
       launchSite={launchSite}
       setLaunchSite={setLaunchSite}
+      targetHeight={targetHeight}
+      setTargetHeight={setTargetHeight}
     />
   );
 
@@ -100,7 +102,7 @@ function App() {
             {renderView()}
           </div>
           <div className="px-8 lg:px-16 py-8">
-            <RightPane data={latest} />
+            <RightPane data={latest} history={telemetryData} targetHeight={targetHeight} />
           </div>
         </div>
       </div>
@@ -109,3 +111,4 @@ function App() {
 }
 
 export default App;
+
