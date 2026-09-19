@@ -20,7 +20,9 @@ function App() {
     DEFAULT_CONFIG.launchSite.longitude,
     DEFAULT_CONFIG.launchSite.latitude,
   ]);
-  const [targetHeight, setTargetHeight] = useState<number>(20000);
+  const [targetHeight, setTargetHeight] = useState<number>(
+    DEFAULT_CONFIG.targetAltitude,
+  );
 
   const latest =
     telemetryData[telemetryData.length - 1] || DEFAULT_TELEMETRY_DATA;

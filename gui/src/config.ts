@@ -5,6 +5,7 @@ export const DEFAULT_CONFIG = {
     latitude: -34.429494,
     longitude: 139.600430,
   },
+  targetAltitude: 10000,
   connection: {
     transport: "serial" as const,
     websocketUrl: "ws://localhost:8765",
