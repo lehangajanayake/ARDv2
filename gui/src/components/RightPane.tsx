@@ -2,17 +2,16 @@
 import { Telemetry } from "../types";
 import { TelemetryPlot } from "./TelemetryPlot";
 
-const TARGET_ALTITUDE_METERS = 6096; 
-
 const calculatePercentage = (value: number, max: number) =>
   (Math.min(Math.max(value, 0), max) / max) * 100;
 
 interface Props {
   data: Telemetry;
   history: Telemetry[];
+  targetHeight: number;
 }
 
-const RightPane = ({ data, history }: Props) => {
+const RightPane = ({ data, history, targetHeight }: Props) => {
   const accelerationMetrics = [
     { title: "Acceleration X", value: data.accX, unit: "m/s²", max: 10 },
     { title: "Acceleration Y", value: data.accY, unit: "m/s²", max: 10 },
@@ -46,8 +45,11 @@ const RightPane = ({ data, history }: Props) => {
         title="Live Height"
         dataKey="altitude"
         color="#ffbd2e"
-        referenceValue={TARGET_ALTITUDE_METERS}
+        referenceValue={targetHeight}
         referenceLabel="Target"
+        xAxisLabel="Time (s)"
+        yAxisLabel="Altitude (m)"
+        yAxisUnit="m"
       />
     </div>
   );

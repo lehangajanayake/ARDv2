@@ -22,6 +22,7 @@ interface TelemetryPlotProps {
   referenceColor?: string;
   xAxisLabel?: string;
   yAxisLabel?: string;
+  yAxisUnit?: string;
 }
 
 export const TelemetryPlot: React.FC<TelemetryPlotProps> = ({
@@ -34,6 +35,7 @@ export const TelemetryPlot: React.FC<TelemetryPlotProps> = ({
   referenceColor = "#60a5fa",
   xAxisLabel = "Time (s)",
   yAxisLabel,
+  yAxisUnit,
 }) => {
   return (
     <div className="flex flex-col items-center w-full h-full">
@@ -56,6 +58,9 @@ export const TelemetryPlot: React.FC<TelemetryPlotProps> = ({
             <YAxis
               tick={{ fill: "white", fontSize: 10 }}
               domain={['auto', 'auto']}
+              tickFormatter={
+                yAxisUnit ? (value: number) => `${value} ${yAxisUnit}` : undefined
+              }
               label={
                 yAxisLabel
                   ? {
