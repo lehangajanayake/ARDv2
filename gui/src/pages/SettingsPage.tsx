@@ -236,7 +236,7 @@ export default function SettingsPage({
     const height = Number(maxHeightInput);
 
     if (!Number.isFinite(height) || height <= 0) {
-      setMaxHeightMessage("Enter a valid height in meters.");
+      setMaxHeightMessage("Enter a valid height in feet.");
       return;
     }
 
@@ -394,7 +394,7 @@ export default function SettingsPage({
       <div className="mb-6 rounded bg-slate-900/70 p-4 text-white">
         <p className="mb-3 font-semibold">Max height</p>
         <label className="text-sm">
-          Target height (m)
+          Target height (ft)
           <input
             type="number"
             min="0"

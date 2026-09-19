@@ -21,7 +21,7 @@ function TelemetryPage({
                         metrics={{
                             title: "Altitude",
                             value: formatTelemetryValue(altitude),
-                            unit: "m",
+                            unit: "ft",
                         }}
                     />
                 </div>

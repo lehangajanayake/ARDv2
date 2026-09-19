@@ -6,6 +6,7 @@ import { Telemetry } from "@/types";
 
 const MAX_MAP_POINTS = 1000;
 const MAP_BASE_URL = `${import.meta.env.BASE_URL}maps`;
+const FEET_TO_METERS = 0.3048;
 
 const offlineStyle: maplibregl.StyleSpecification = {
   version: 8,
@@ -72,7 +73,9 @@ function FlightPathOverlay({ map, points }: { map: MapLibreMap; points: Mappable
       const ground = points.map((point) => map.project([point.lon, point.lat]));
       const elevated = points.map((point, index) => ({
         x: ground[index].x,
-        y: ground[index].y - Math.max(0, point.altitude ?? 0) * altitudeScale,
+        y:
+          ground[index].y -
+          Math.max(0, point.altitude ?? 0) * FEET_TO_METERS * altitudeScale,
       }));
 
       context.lineWidth = 2;

@@ -48,8 +48,8 @@ const RightPane = ({ data, history, targetHeight }: Props) => {
         referenceValue={targetHeight}
         referenceLabel="Target"
         xAxisLabel="Time (s)"
-        yAxisLabel="Altitude (m)"
-        yAxisUnit="m"
+        yAxisLabel="Altitude (ft)"
+        yAxisUnit="ft"
       />
     </div>
   );

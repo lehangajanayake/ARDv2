@@ -57,8 +57,8 @@ The GUI can read telemetry from either a Web Serial connection or a WebSocket co
 
 The GUI supports two telemetry sources:
 
-- **SRAD:** 12-field CSV telemetry containing time, temperature, pressure, altitude, acceleration, angular velocity, latitude, and longitude.
-- **COTS Feather:** `GPS_STAT` packets containing latitude, longitude, and altitude. COTS altitude is converted from feet to meters for the GUI; unavailable sensor values are set to zero.
+- **SRAD:** 12-field CSV telemetry containing time, temperature, pressure, altitude, acceleration, angular velocity, latitude, and longitude. The GUI stores and exports altitude in feet.
+- **COTS Feather:** `GPS_STAT` packets containing latitude, longitude, and altitude in feet. Unavailable sensor values are shown as `--.--`.
 
 On the Settings page you can:
 

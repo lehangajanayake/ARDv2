@@ -94,7 +94,7 @@ export function parseCotsGpsTelemetry(
     time,
     Temp: null,
     pressure: null,
-    altitude: altitudeFeet * 0.3048,
+    altitude: altitudeFeet,
     accX: null,
     accY: null,
     accZ: null,
