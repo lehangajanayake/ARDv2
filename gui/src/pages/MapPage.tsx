@@ -27,8 +27,12 @@ const offlineStyle: maplibregl.StyleSpecification = {
   ],
 };
 
-function isValidPoint(point: Telemetry) {
+type MappableTelemetry = Telemetry & { lat: number; lon: number };
+
+function isValidPoint(point: Telemetry): point is MappableTelemetry {
   return (
+    point.lat !== null &&
+    point.lon !== null &&
     Number.isFinite(point.lat) &&
     Number.isFinite(point.lon) &&
     point.lat >= -90 &&
@@ -39,7 +43,7 @@ function isValidPoint(point: Telemetry) {
   );
 }
 
-function FlightPathOverlay({ map, points }: { map: MapLibreMap; points: Telemetry[] }) {
+function FlightPathOverlay({ map, points }: { map: MapLibreMap; points: MappableTelemetry[] }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -68,7 +72,7 @@ function FlightPathOverlay({ map, points }: { map: MapLibreMap; points: Telemetr
       const ground = points.map((point) => map.project([point.lon, point.lat]));
       const elevated = points.map((point, index) => ({
         x: ground[index].x,
-        y: ground[index].y - Math.max(0, point.altitude) * altitudeScale,
+        y: ground[index].y - Math.max(0, point.altitude ?? 0) * altitudeScale,
       }));
 
       context.lineWidth = 2;

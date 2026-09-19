@@ -24,9 +24,9 @@ function App() {
 
   const latest =
     telemetryData[telemetryData.length - 1] || DEFAULT_TELEMETRY_DATA;
-  const rotationAngle = latest.angVelZ || 0;
-  const time = latest.time || 0;
-  const altitude = latest.altitude || 0;
+  const rotationAngle = latest.angVelZ ?? 0;
+  const time = latest.time;
+  const altitude = latest.altitude;
 
   const settingsView = (
     <SettingsPage

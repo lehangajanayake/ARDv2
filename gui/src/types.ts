@@ -23,34 +23,41 @@ export type Metric = {
 };
 
 export type Telemetry = {
-  time: number;
-  Temp: number;
-  pressure: number;
-  altitude: number;
-  accX: number;
-  accY: number;
-  accZ: number;
-  angVelX: number;
-  angVelY: number;
-  angVelZ: number;
-  lat: number;
-  lon: number;
+  time: number | null;
+  Temp: number | null;
+  pressure: number | null;
+  altitude: number | null;
+  accX: number | null;
+  accY: number | null;
+  accZ: number | null;
+  angVelX: number | null;
+  angVelY: number | null;
+  angVelZ: number | null;
+  lat: number | null;
+  lon: number | null;
 };
 
 export const DEFAULT_TELEMETRY_DATA: Telemetry = {
-  time: 0,
-  Temp: 0,
-  pressure: 0,
-  altitude: 0,
-  accX: 0,
-  accY: 0,
-  accZ: 0,
-  angVelX: 0,
-  angVelY: 0,
-  angVelZ: 0,
-  lat: 0,
-  lon: 0,
+  time: null,
+  Temp: null,
+  pressure: null,
+  altitude: null,
+  accX: null,
+  accY: null,
+  accZ: null,
+  angVelX: null,
+  angVelY: null,
+  angVelZ: null,
+  lat: null,
+  lon: null,
 };
+
+export function formatTelemetryValue(
+  value: number | null,
+  digits = 2,
+): string {
+  return value === null ? "--.--" : value.toFixed(digits);
+}
 
 export const DATA_COLUMNS: { key: keyof Telemetry; label: string }[] = [
   { key: "time", label: "Time" },

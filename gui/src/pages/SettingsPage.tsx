@@ -295,10 +295,10 @@ export default function SettingsPage({
       return;
     }
 
-    const delay = Math.max(
-      0,
-      (nextPacket.time - packet.time) / replaySpeed,
-    );
+    const delay =
+      nextPacket.time === null || packet.time === null
+        ? 0
+        : Math.max(0, (nextPacket.time - packet.time) / replaySpeed);
     replayTimerRef.current = window.setTimeout(
       () => replayNextPacket(index + 1),
       delay,
@@ -491,7 +491,7 @@ export default function SettingsPage({
           {dataSource === "srad"
             ? "12-field CSV telemetry"
             : dataSource === "cots"
-              ? "GPS_STAT position telemetry; unavailable sensors are zero"
+              ? "GPS_STAT position telemetry; unavailable sensors display as --.--"
               : "Replay telemetry from an exported CSV file"}
         </p>
       </div>

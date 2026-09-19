@@ -1,4 +1,4 @@
-import { STATUS, Metric as TMetric, Telemetry } from "../types";
+import { formatTelemetryValue, STATUS, Metric as TMetric, Telemetry } from "../types";
 import { Metric } from "./Metric";
 
 const iconColors: Record<STATUS, string> = {
@@ -33,10 +33,10 @@ const LeftPane = ({ data, serial_status, telemetry_status } : Props) => {
   ];
 
   const metrics: TMetric[] = [
-    { title: "Temperature", value: data.Temp.toFixed(2), unit: "°C" },
-    { title: "Pressure", value: data.pressure.toFixed(2), unit: "hPa" },
-    { title: "Latitude", value: data.lat.toFixed(6), unit: "°" },
-    { title: "Longitude", value: data.lon.toFixed(6), unit: "°" },
+    { title: "Temperature", value: formatTelemetryValue(data.Temp), unit: "°C" },
+    { title: "Pressure", value: formatTelemetryValue(data.pressure), unit: "hPa" },
+    { title: "Latitude", value: formatTelemetryValue(data.lat, 6), unit: "°" },
+    { title: "Longitude", value: formatTelemetryValue(data.lon, 6), unit: "°" },
   ];
 
   return (

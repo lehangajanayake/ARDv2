@@ -1,9 +1,9 @@
 
-import { Telemetry } from "../types";
+import { formatTelemetryValue, Telemetry } from "../types";
 import { TelemetryPlot } from "./TelemetryPlot";
 
-const calculatePercentage = (value: number, max: number) =>
-  (Math.min(Math.max(value, 0), max) / max) * 100;
+const calculatePercentage = (value: number | null, max: number) =>
+  value === null ? 0 : (Math.min(Math.max(value, 0), max) / max) * 100;
 
 interface Props {
   data: Telemetry;
@@ -34,7 +34,7 @@ const RightPane = ({ data, history, targetHeight }: Props) => {
               </div>
             </div>
             <div className="pl-6 text-lg text-white whitespace-nowrap">
-              {item.value.toFixed(2)} {item.unit}
+              {formatTelemetryValue(item.value)} {item.unit}
             </div>
           </div>
         ))}

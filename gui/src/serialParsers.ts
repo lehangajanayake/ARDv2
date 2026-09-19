@@ -92,15 +92,15 @@ export function parseCotsGpsTelemetry(
 
   return {
     time,
-    Temp: 0,
-    pressure: 0,
+    Temp: null,
+    pressure: null,
     altitude: altitudeFeet * 0.3048,
-    accX: 0,
-    accY: 0,
-    accZ: 0,
-    angVelX: 0,
-    angVelY: 0,
-    angVelZ: 0,
+    accX: null,
+    accY: null,
+    accZ: null,
+    angVelX: null,
+    angVelY: null,
+    angVelZ: null,
     lat,
     lon,
   };
