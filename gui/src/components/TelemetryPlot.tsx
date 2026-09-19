@@ -78,9 +78,7 @@ export const TelemetryPlot: React.FC<TelemetryPlotProps> = ({
               itemStyle={{ color: "white" }}
             />
             {referenceValue !== undefined && (
-              <ReferenceLine
-                y={referenceValue}
-                stroke={referenceColor}
+                ifOverflow="extendDomain"
                 strokeDasharray="4 4"
                 label={
                   referenceLabel
