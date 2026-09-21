@@ -95,7 +95,7 @@ function App() {
       >
         <div className="flex flex-row h-full">
           <div className="px-8 lg:px-16 py-8">
-            <LeftPane data={latest} serial_status={portStatus} telemetry_status={STATUS.DISCONNECTED} />
+            <LeftPane data={latest} serial_status={portStatus} />
           </div>
           <div className="flex-1 px-4 sm:px-6 md:px-8 overflow-y-auto">
             <div className={page === PAGE.SETTINGS ? "contents" : "hidden"}>

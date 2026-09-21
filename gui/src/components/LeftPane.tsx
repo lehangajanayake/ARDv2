@@ -22,14 +22,12 @@ const getLabelColor = (status: STATUS): string => labelColors[status];
 interface Props {
   data: Telemetry;
   serial_status: STATUS;
-  telemetry_status: STATUS;
 }
 
-const LeftPane = ({ data, serial_status, telemetry_status } : Props) => {
+const LeftPane = ({ data, serial_status} : Props) => {
 
   const connectionData = [
     { title: "Serial Port", status: serial_status },
-    { title: "Sensor Status", status: telemetry_status },
   ];
 
   const metrics: TMetric[] = [
