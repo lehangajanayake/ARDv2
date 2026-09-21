@@ -84,7 +84,7 @@ export const TelemetryPlot: React.FC<TelemetryPlotProps> = ({
                 strokeDasharray="4 4"
                 label={
                   referenceLabel
-                    ? { value: referenceLabel, fill: referenceColor, fontSize: 10, position: "insideTopRight" }
+                    ? { value: referenceLabel, fill: referenceColor, fontSize: 12, position: "insideTopRight" }
                     : undefined
                 }
               />

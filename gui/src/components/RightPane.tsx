@@ -42,7 +42,7 @@ const RightPane = ({ data, history, targetHeight }: Props) => {
 
       <TelemetryPlot
         data={history}
-        title="Live Height"
+        title="Altitude"
         dataKey="altitude"
         color="#ffbd2e"
         referenceValue={targetHeight}
