@@ -77,7 +77,7 @@ export const DATA_COLUMNS: { key: keyof Telemetry; label: string }[] = [
 export const PLOT_METADATA: { key: keyof Telemetry; label: string, color: string }[] = [
   { key: "Temp", label: "Temp", color: "#ff6730" },    
   { key: "pressure", label: "Pressure", color: "#ffba30" },    
-  { key: "altitude", label: "Altitude", color: "#FFD630" },
-  { key: "lat", label: "Latitude", color: "#30ffba" },
-  { key: "lon", label: "Longitude", color: "#30d4ff" }
+  { key: "gyroX", label: "Gyro X", color: "#ff668f" },
+  { key: "gyroY", label: "Gyro Y", color: "#65f7bf" },
+  { key: "gyroZ", label: "Gyro Z", color: "#5ad8ff" }
 ];
