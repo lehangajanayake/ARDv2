@@ -1,6 +1,7 @@
 
 import { formatTelemetryValue, Telemetry } from "../types";
 import { TelemetryPlot } from "./TelemetryPlot";
+import Gyro from "./Gyro";
 
 const calculatePercentage = (value: number | null, max: number) =>
   value === null ? 0 : (Math.min(Math.max(value, 0), max) / max) * 100;
@@ -51,6 +52,9 @@ const RightPane = ({ data, history, targetHeight }: Props) => {
         yAxisLabel="Altitude (ft)"
         yAxisUnit="ft"
       />
+
+      <Gyro data={data} />
+
     </div>
   );
 };

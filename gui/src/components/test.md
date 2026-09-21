@@ -99,9 +99,9 @@ const Details = ({ data }: Props) => {
                     <TableCell className="text-white">{item.accX}</TableCell>
                     <TableCell className="text-white">{item.accY}</TableCell>
                     <TableCell className="text-white">{item.accZ}</TableCell>
-                    <TableCell className="text-white">{item.angVelX}</TableCell>
-                    <TableCell className="text-white">{item.angVelY}</TableCell>
-                    <TableCell className="text-white">{item.angVelZ}</TableCell>
+                    <TableCell className="text-white">{item.gyroX}</TableCell>
+                    <TableCell className="text-white">{item.gyroY}</TableCell>
+                    <TableCell className="text-white">{item.gyroZ}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

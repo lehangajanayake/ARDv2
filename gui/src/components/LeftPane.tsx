@@ -45,6 +45,7 @@ const LeftPane = ({ data, serial_status} : Props) => {
         ))}
       </div>
 
+
       <div className="space-y-11">
         {connectionData.map((connection, index) => (
           <div key={`{connection}-${index}`} className="flex items-center">
