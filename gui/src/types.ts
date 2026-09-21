@@ -30,9 +30,9 @@ export type Telemetry = {
   accX: number | null;
   accY: number | null;
   accZ: number | null;
-  angVelX: number | null;
-  angVelY: number | null;
-  angVelZ: number | null;
+  gyroX: number | null;
+  gyroY: number | null;
+  gyroZ: number | null;
   lat: number | null;
   lon: number | null;
 };
@@ -45,9 +45,9 @@ export const DEFAULT_TELEMETRY_DATA: Telemetry = {
   accX: null,
   accY: null,
   accZ: null,
-  angVelX: null,
-  angVelY: null,
-  angVelZ: null,
+  gyroX: null,
+  gyroY: null,
+  gyroZ: null,
   lat: null,
   lon: null,
 };
@@ -67,9 +67,9 @@ export const DATA_COLUMNS: { key: keyof Telemetry; label: string }[] = [
   { key: "accX", label: "Acc X" },
   { key: "accY", label: "Acc Y" },
   { key: "accZ", label: "Acc Z" },
-  { key: "angVelX", label: "Ang Vel X" },
-  { key: "angVelY", label: "Ang Vel Y" },
-  { key: "angVelZ", label: "Ang Vel Z" },
+  { key: "gyroX", label: "Gyro X" },
+  { key: "gyroY", label: "Gyro Y" },
+  { key: "gyroZ", label: "Gyro Z" },
   { key: "lat", label: "Latitude" },
   { key: "lon", label: "Longitude" },
 ];
