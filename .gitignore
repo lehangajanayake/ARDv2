@@ -1,0 +1,62 @@
+# Python
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.venv
+*.myenv
+
+env/
+venv/
+myenv/
+
+ENV/
+ENV.bak/
+venv.bak/
+instance/
+.pytest_cache/
+.coverage
+.cache
+*.log
+
+# Flask
+*.db
+*.sqlite3
+*.sqlite
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Vite
+dist/
+.vite/
+.vite-cache/
+dist-ssr
+
+# Logs
+logs/
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+#offline map tiles
+maps/
+
+data/
