@@ -75,8 +75,8 @@ function Gyro({ data }: Props) {
 	});
 
 	return (
-		<div className="w-48" role="img" aria-label="Rocket gyro axes">
-			<h2 className="mb-1 text-center text-xs font-bold uppercase tracking-[0.18em] text-gray-300">
+		<div className="flex flex-col items-center w-full h-full">
+			<h2 className="text-center text-gray-300 text-sm sm:text-base">
 				Rocket Gyro Axes
 			</h2>
 			<div className="h-48">
