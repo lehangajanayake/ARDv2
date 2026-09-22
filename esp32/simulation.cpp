@@ -1,6 +1,6 @@
 // ESP32 Arduino serial telemetry simulator.
 // CSV format must match gui/src/pages/SettingsPage.tsx:
-// time,Temp,pressure,altitude,accX,accY,accZ,angVelX,angVelY,angVelZ,lat,lon
+// time,Temp,pressure,altitude,accX,accY,accZ,gyroX,gyroY,gyroZ,lat,lon
 #include <Arduino.h>
 #include <math.h>
 
@@ -67,9 +67,9 @@ void sendSample() {
 	const float accX = sampleValue(-2.0f, 2.0f);
 	const float accY = sampleValue(-2.0f, 2.0f);
 	const float accZ = sampleValue(8.0f, 10.0f);
-	const float angVelX = sampleValue(-180.0f, 180.0f);
-	const float angVelY = sampleValue(-180.0f, 180.0f);
-	const float angVelZ = sampleValue(-180.0f, 180.0f);
+	const float gyroX = sampleValue(-180.0f, 180.0f);
+	const float gyroY = sampleValue(-180.0f, 180.0f);
+	const float gyroZ = sampleValue(-180.0f, 180.0f);
 	const float lat = latitudeFromNorthMeters(north);
 	const float lon = longitudeFromEastMeters(east);
 
@@ -82,9 +82,9 @@ void sendSample() {
 			accX,
 			accY,
 			accZ,
-			angVelX,
-			angVelY,
-			angVelZ,
+			gyroX,
+			gyroY,
+			gyroZ,
 			lat,
 			lon);
 }

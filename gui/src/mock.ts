@@ -14,9 +14,9 @@ import { Telemetry } from "./types";
         accX: Math.random() * 2 - 1,
         accY: Math.random() * 2 - 1,
         accZ: Math.random() * 2 - 1,
-        angVelX: Math.random() * 2 - 1,
-        angVelY: Math.random() * 2 - 1,
-        angVelZ: Math.random() * 2 - 1,
+        gyroX: Math.random() * 2 - 1,
+        gyroY: Math.random() * 2 - 1,
+        gyroZ: Math.random() * 2 - 1,
         lat: Math.random() * 180 - 90,
         lon: Math.random() * 360 - 180
       };

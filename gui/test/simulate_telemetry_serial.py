@@ -25,9 +25,9 @@ def generate_telemetry_packet():
         "accX": round(random.uniform(-2, 2), 6),
         "accY": round(random.uniform(-2, 2), 6),
         "accZ": round(random.uniform(-2, 2), 6),
-        "angVelX": round(random.uniform(-250, 250), 6),
-        "angVelY": round(random.uniform(-250, 250), 6),
-        "angVelZ": round(random.uniform(-250, 250), 6),
+        "gyroX": round(random.uniform(-250, 250), 6),
+        "gyroY": round(random.uniform(-250, 250), 6),
+        "gyroZ": round(random.uniform(-250, 250), 6),
     }
 
 # Send telemetry data over serial port
@@ -36,7 +36,7 @@ try:
         packet = generate_telemetry_packet()
         
         # Format as CSV string
-        csv_data = f"{packet['time']},{packet['bmpTemp']},{packet['imuTemp']},{packet['pressure']},{packet['altitude']},{packet['accX']},{packet['accY']},{packet['accZ']},{packet['angVelX']},{packet['angVelY']},{packet['angVelZ']}\n"
+        csv_data = f"{packet['time']},{packet['bmpTemp']},{packet['imuTemp']},{packet['pressure']},{packet['altitude']},{packet['accX']},{packet['accY']},{packet['accZ']},{packet['gyroX']},{packet['gyroY']},{packet['gyroZ']}\n"
         
         # Write to serial port
         ser.write(csv_data.encode('utf-8'))
