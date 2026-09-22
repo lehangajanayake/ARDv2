@@ -29,7 +29,7 @@ function TelemetryPage({
 
             
             <img
-                className="relative z-0 w-[16vh] max-w-full h-auto"
+                className="relative z-0 h-[85vh] max-w-full w-auto"
                 src={rocketImage}
                 alt="Rocket"
                 style={{ transform: `translateY(-5px) rotate(${rotationAngle}deg)` }}
