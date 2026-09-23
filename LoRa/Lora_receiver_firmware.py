@@ -37,6 +37,7 @@ DIO0 (interrupt) -> --interrupt-pin (default 12)
 
 import argparse
 import asyncio
+import logging
 import time
 import traceback
 from typing import Any, Optional
@@ -49,6 +50,10 @@ TELEMETRY_FIELD_COUNT = 12
 TX_POWER_FLOOR = 5  # library's documented minimum; never actually used (see ReceiveOnlyLoRa)
 
 connected_clients: set[Any] = set()
+logger = logging.getLogger("lora_receiver")
+received_packet_count = 0
+valid_packet_count = 0
+rejected_packet_count = 0
 
 
 def is_telemetry_packet(line: str) -> bool:
@@ -87,6 +92,11 @@ def parse_arguments() -> argparse.Namespace:
 	parser.add_argument("--address", type=int, default=1, help="Unused by this receive-only build; kept for API compatibility with the LoRa constructor.")
 	parser.add_argument("--host", default="localhost")
 	parser.add_argument("--websocket-port", type=int, default=8765)
+	parser.add_argument(
+		"--debug",
+		action="store_true",
+		help="Enable detailed LoRa, packet, and WebSocket diagnostics.",
+	)
 	return parser.parse_args()
 
 
@@ -98,6 +108,7 @@ def pulse_reset(reset_pin: int) -> None:
 	If your board needs an active reset (i.e. it doesn't self-reset via an
 	RC network on power-up), do it here first.
 	"""
+	logger.debug("Pulsing SX1276 reset pin BCM GPIO%d.", reset_pin)
 	import RPi.GPIO as GPIO
 
 	GPIO.setmode(GPIO.BCM)
@@ -106,6 +117,7 @@ def pulse_reset(reset_pin: int) -> None:
 	time.sleep(0.01)
 	GPIO.output(reset_pin, GPIO.HIGH)
 	time.sleep(0.01)
+	logger.debug("SX1276 reset pulse complete.")
 
 
 class ReceiveOnlyLoRa(LoRa):
@@ -136,9 +148,11 @@ class ReceiveOnlyLoRa(LoRa):
 
 	# --- Raw receive path: no RadioHead header, no address filter, no ACKs ---
 	def _handle_interrupt(self, channel: int) -> None:
+		global received_packet_count
 		irq_flags = self._spi_read(rlc.REG_12_IRQ_FLAGS)
 
 		if self._mode == rlc.MODE_RXCONTINUOUS and (irq_flags & rlc.RX_DONE):
+			received_packet_count += 1
 			packet_len = self._spi_read(rlc.REG_13_RX_NB_BYTES)
 			self._spi_write(
 				rlc.REG_0D_FIFO_ADDR_PTR,
@@ -146,6 +160,11 @@ class ReceiveOnlyLoRa(LoRa):
 			)
 			packet = self._spi_read(rlc.REG_00_FIFO, packet_len)
 			self._spi_write(rlc.REG_12_IRQ_FLAGS, 0xFF)
+			logger.debug(
+				"RX packet #%d received: %d bytes.",
+				received_packet_count,
+				packet_len,
+			)
 
 			if self._on_telemetry is not None:
 				self._on_telemetry(bytes(packet))
@@ -163,19 +182,36 @@ def make_telemetry_callback(loop: asyncio.AbstractEventLoop, queue: "asyncio.Que
 	"""
 
 	def on_telemetry(packet: bytes) -> None:
+		global valid_packet_count, rejected_packet_count
 		try:
 			line = packet.decode("ascii", errors="ignore").strip()
 			if is_telemetry_packet(line):
+				valid_packet_count += 1
+				logger.debug(
+					"Valid telemetry packet #%d: %s",
+					valid_packet_count,
+					line,
+				)
 				loop.call_soon_threadsafe(queue.put_nowait, line)
+			else:
+				rejected_packet_count += 1
+				logger.warning(
+					"Rejected LoRa payload #%d (%d bytes): %r",
+					rejected_packet_count,
+					len(packet),
+					line,
+				)
 		except Exception:
-			traceback.print_exc()
+			logger.exception("Error while decoding a LoRa payload.")
 
 	return on_telemetry
 
 
 async def broadcast(message: str) -> None:
 	if not connected_clients:
+		logger.debug("Telemetry received with no WebSocket clients connected.")
 		return
+	logger.debug("Broadcasting telemetry to %d WebSocket client(s).", len(connected_clients))
 
 	results = await asyncio.gather(
 		*(client.send(message) for client in connected_clients),
@@ -200,33 +236,56 @@ async def handle_client(websocket: Any, *_args: Any) -> None:
 	"""Register a read-only telemetry client; never receive commands."""
 	connected_clients.add(websocket)
 	remote = getattr(websocket, "remote_address", "unknown client")
-	print(f"WebSocket client connected: {remote}")
+	logger.info("WebSocket client connected: %s", remote)
 	try:
 		await websocket.wait_closed()
 	finally:
 		connected_clients.discard(websocket)
-		print(f"WebSocket client disconnected: {remote}")
+		logger.info("WebSocket client disconnected: %s", remote)
 
 
 async def run(arguments: argparse.Namespace) -> None:
+	logger.info(
+		"Starting LoRa receiver: frequency=%.3f MHz, SPI channel=%d, interrupt GPIO=%d, "
+		"reset GPIO=%s, WebSocket=%s:%d",
+		arguments.frequency,
+		arguments.spi_channel,
+		arguments.interrupt_pin,
+		arguments.reset_pin if arguments.reset_pin is not None else "disabled",
+		arguments.host,
+		arguments.websocket_port,
+	)
 	if arguments.reset_pin is not None:
 		pulse_reset(arguments.reset_pin)
 
 	loop = asyncio.get_running_loop()
 	queue: "asyncio.Queue[str]" = asyncio.Queue()
 
-	radio = ReceiveOnlyLoRa(
-		arguments.spi_channel,
-		arguments.interrupt_pin,
-		arguments.address,
-		freq=arguments.frequency,
-		tx_power=TX_POWER_FLOOR,
-		modem_config=ModemConfig.Bw125Cr45Sf128,  # 125 kHz, 4/5 coding, SF7 (matches original config)
-		acks=False,  # belt-and-suspenders: even though send_ack() is overridden to raise
-		on_telemetry=make_telemetry_callback(loop, queue),
-	)
-	radio.set_mode_rx()
-	print(
+	logger.info("Initializing raspi-lora and opening SPI/GPIO.")
+	try:
+		radio = ReceiveOnlyLoRa(
+			arguments.spi_channel,
+			arguments.interrupt_pin,
+			arguments.address,
+			freq=arguments.frequency,
+			tx_power=TX_POWER_FLOOR,
+			modem_config=ModemConfig.Bw125Cr45Sf128,  # 125 kHz, 4/5 coding, SF7 (matches original config)
+			acks=False,  # belt-and-suspenders: even though send_ack() is overridden to raise
+			on_telemetry=make_telemetry_callback(loop, queue),
+		)
+		logger.info("LoRa object initialized successfully.")
+		version_register = getattr(rlc, "REG_42_VERSION", 0x42)
+		chip_version = radio._spi_read(version_register)
+		logger.info("SX127x version register 0x%02X returned 0x%02X.", version_register, chip_version)
+		logger.info("Setting radio to continuous receive mode.")
+		radio.set_mode_rx()
+	except Exception:
+		logger.exception(
+			"LoRa initialization failed. Check SPI enablement, NSS/SPI channel, "
+			"DIO0 interrupt GPIO, reset wiring, frequency, and power.",
+		)
+		raise
+	logger.info(
 		f"LoRa receive-only radio ready at {arguments.frequency} MHz; "
 		"transmit is disabled at the code level in this program."
 	)
@@ -237,23 +296,35 @@ async def run(arguments: argparse.Namespace) -> None:
 			arguments.host,
 			arguments.websocket_port,
 		):
-			print(
+			logger.info(
 				f"WebSocket telemetry server listening at "
 				f"ws://{arguments.host}:{arguments.websocket_port}"
 			)
 			await drain_telemetry(queue)
 	finally:
+		logger.info(
+			"Stopping receiver. RX packets=%d, valid telemetry=%d, rejected payloads=%d.",
+			received_packet_count,
+			valid_packet_count,
+			rejected_packet_count,
+		)
 		radio.close()
 
 
 def main() -> None:
 	arguments = parse_arguments()
+	logging.basicConfig(
+		level=logging.DEBUG if arguments.debug else logging.INFO,
+		format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+		datefmt="%Y-%m-%d %H:%M:%S",
+	)
+	logger.debug("Debug logging enabled.")
 	try:
 		asyncio.run(run(arguments))
 	except KeyboardInterrupt:
-		print("\nReceiver stopped.")
+		logger.info("Receiver stopped by keyboard interrupt.")
 	except Exception:
-		traceback.print_exc()
+		logger.exception("Receiver stopped because of an unhandled error.")
 
 
 if __name__ == "__main__":
