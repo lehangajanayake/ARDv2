@@ -112,11 +112,15 @@ def pulse_reset(reset_pin: int) -> None:
 	import RPi.GPIO as GPIO
 
 	GPIO.setmode(GPIO.BCM)
+	GPIO.cleanup(reset_pin)
 	GPIO.setup(reset_pin, GPIO.OUT)
-	GPIO.output(reset_pin, GPIO.LOW)
-	time.sleep(0.01)
-	GPIO.output(reset_pin, GPIO.HIGH)
-	time.sleep(0.01)
+	try:
+		GPIO.output(reset_pin, GPIO.LOW)
+		time.sleep(0.01)
+		GPIO.output(reset_pin, GPIO.HIGH)
+		time.sleep(0.01)
+	finally:
+		GPIO.cleanup(reset_pin)
 	logger.debug("SX1276 reset pulse complete.")
 
 

@@ -81,7 +81,7 @@ Connect the inAir9B to the Raspberry Pi's 3.3 V SPI pins. The current receiver u
 | MOSI | GPIO10 / physical pin 19 |
 | NSS / CS | CE1 / GPIO7 / physical pin 26 |
 | DIO0 | GPIO18 / physical pin 12 |
-| RESET |GPIO 12/ physical pin 32 |
+| RESET | GPIO12 / physical pin 32 |
 | 3.3V | 3.3V / physical pin 17 |
 | GND | GND |
 
@@ -99,9 +99,9 @@ Run the receiver on the Raspberry Pi:
 python3 LoRa/Lora_receiver_firmware.py
 ```
 
-The receiver uses CE1 (SPI channel 1) for NSS and GPIO18 for the inAir9B DIO0
-interrupt by default. No reset pin is used in the current wiring. If a reset
-wire is added later, pass its BCM GPIO number explicitly:
+The receiver uses CE1 (SPI channel 1) for NSS, GPIO18 for the inAir9B DIO0
+interrupt, and GPIO12 for RESET by default. If the reset wire uses a different
+BCM GPIO, pass it explicitly:
 
 ```bash
 python3 LoRa/Lora_receiver_firmware.py --reset-pin <BCM_RESET_PIN>
