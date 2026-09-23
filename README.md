@@ -79,9 +79,9 @@ Connect the inAir9B to the Raspberry Pi's 3.3 V SPI pins. The current receiver u
 | SCK | GPIO11 / physical pin 23 |
 | MISO | GPIO9 / physical pin 21 |
 | MOSI | GPIO10 / physical pin 19 |
-| NSS / CS | CE0 / GPIO8 / physical pin 24 |
-| DIO0 | GPIO17 / physical pin 11 |
-| RESET | GPIO25 / physical pin 22 (optional) |
+| NSS / CS | CE1 / GPIO7 / physical pin 26 |
+| DIO0 | GPIO18 / physical pin 12 |
+| RESET |GPIO 12/ physical pin 32 |
 | 3.3V | 3.3V / physical pin 17 |
 | GND | GND |
 
@@ -99,15 +99,15 @@ Run the receiver on the Raspberry Pi:
 python3 LoRa/Lora_receiver_firmware.py
 ```
 
-The receiver uses GPIO17 for the inAir9B DIO0 interrupt by default. If the
-module needs a manual reset, pass the wired reset pin explicitly:
+The receiver uses CE1 (SPI channel 1) for NSS and GPIO18 for the inAir9B DIO0
+interrupt by default. No reset pin is used in the current wiring. If a reset
+wire is added later, pass its BCM GPIO number explicitly:
 
 ```bash
-python3 LoRa/Lora_receiver_firmware.py --reset-pin 25
+python3 LoRa/Lora_receiver_firmware.py --reset-pin <BCM_RESET_PIN>
 ```
 
-The reset option is not needed for modules that reset themselves reliably on
-power-up.
+Pass `--debug` to enable detailed radio, packet, and WebSocket diagnostics.
 
 It listens for 12-field numeric telemetry at 915 MHz and serves it at `ws://localhost:8765`. Use `--frequency 868` for an 868 MHz inAir9B and `--host 0.0.0.0` when the GUI runs on another computer. The receiver must use the same frequency and radio settings as the transmitter.
 

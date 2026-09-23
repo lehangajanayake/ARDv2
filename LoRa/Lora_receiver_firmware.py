@@ -30,9 +30,9 @@ Requires: pip install raspi-lora==0.2 websockets
 
 """PIN CONNECTIONS
 
-NSS (SPI chip select) -> CE0 or CE1 (CE1 (26 GPIO-phyiscal pin))
-DIO0 (interrupt) -> --interrupt-pin (default 12)
-//no RESET pin used
+NSS (SPI chip select) -> CE1 / BCM GPIO7 / physical pin 26
+DIO0 (interrupt) -> BCM GPIO18 / physical pin 12
+RESET -> BCM GPIO12 / physical pin 32
 """
 
 import argparse
@@ -76,15 +76,15 @@ def parse_arguments() -> argparse.Namespace:
 	)
 	parser.add_argument("--frequency", type=float, default=915.0)
 	parser.add_argument(
-		"--spi-channel", type=int, default=0, choices=(0, 1),
+		"--spi-channel", type=int, default=1, choices=(0, 1),
 		help="SPI channel: 0 for CE0, 1 for CE1 (whichever the inAir9B NSS pin is wired to).",
 	)
 	parser.add_argument(
-		"--interrupt-pin", type=int, default=12,
+		"--interrupt-pin", type=int, default=18,
 		help="BCM GPIO pin wired to the inAir9B's DIO0 pin.",
 	)
 	parser.add_argument(
-		"--reset-pin", type=int, default=None,
+		"--reset-pin", type=int, default=12,
 		help="BCM GPIO pin wired to the inAir9B's RESET pin, if any. "
 		"raspi-lora does not drive reset itself; pass this if your board "
 		"needs an active reset pulse to come up reliably.",
