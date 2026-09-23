@@ -53,7 +53,7 @@ Adept Rocketry Division's Groundstation. This repo consists of a web-based GUI  
 
 ## Getting Started
 
-The GUI can read telemetry from either a Web Serial connection or a WebSocket connection. The embedded system can send telemetry directly over serial, while the included serial-to-WebSocket bridge supports systems where the browser cannot access the virtual serial port.
+The GUI can read telemetry from either a Web Serial connection or a WebSocket connection. The included Raspberry Pi receiver reads the inAir9B directly over SPI and serves valid telemetry packets over WebSocket. It is receive-only: it does not transmit LoRa packets or accept commands from WebSocket clients.
 
 The GUI supports two telemetry sources:
 
@@ -70,7 +70,52 @@ On the Settings page you can:
 
 The map uses local satellite tiles and supports an interactive elevated flight-path overlay. Map tiles can be downloaded for a chosen center coordinate and radius with the offline map downloader. The downloader keeps its zoom levels hardcoded and writes tiles into `gui/public/maps`.
 
-To forward a serial device over WebSocket, install the bridge dependencies and run:
+### Raspberry Pi LoRa Receiver
+
+Connect the inAir9B to the Raspberry Pi's 3.3 V SPI pins. The current receiver uses:
+
+| inAir9B | Raspberry Pi |
+| --- | --- |
+| SCK | GPIO11 / physical pin 23 |
+| MISO | GPIO9 / physical pin 21 |
+| MOSI | GPIO10 / physical pin 19 |
+| NSS / CS | CE0 / GPIO8 / physical pin 24 |
+| DIO0 | GPIO17 / physical pin 11 |
+| RESET | GPIO25 / physical pin 22 (optional) |
+| 3.3V | 3.3V / physical pin 17 |
+| GND | GND |
+
+Enable SPI with `sudo raspi-config` under **Interface Options**, then install the Python dependencies:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install adafruit-blinka spidev raspi-lora==0.2 websockets
+```
+
+Run the receiver on the Raspberry Pi:
+
+```bash
+python3 LoRa/Lora_receiver_firmware.py
+```
+
+The receiver uses GPIO17 for the inAir9B DIO0 interrupt by default. If the
+module needs a manual reset, pass the wired reset pin explicitly:
+
+```bash
+python3 LoRa/Lora_receiver_firmware.py --reset-pin 25
+```
+
+The reset option is not needed for modules that reset themselves reliably on
+power-up.
+
+It listens for 12-field numeric telemetry at 915 MHz and serves it at `ws://localhost:8765`. Use `--frequency 868` for an 868 MHz inAir9B and `--host 0.0.0.0` when the GUI runs on another computer. The receiver must use the same frequency and radio settings as the transmitter.
+
+The receiver contains no LoRa send call and no WebSocket command handling. Keep the inAir9B antenna connected whenever the transmitter is operating; receive-only software cannot protect a separate transmitter from antenna-less operation.
+
+### ESP32 Serial Bridge
+
+For an ESP32 that already receives LoRa and prints telemetry over USB serial, install the bridge dependencies and run:
 
 ```bash
 pip install pyserial websockets
