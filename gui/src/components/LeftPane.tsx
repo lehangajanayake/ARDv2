@@ -30,7 +30,9 @@ const LeftPane = ({ data, serial_status, transport, healthStatus } : Props) => {
 
   const receiverStatus: STATUS = healthStatus === "healthy"
     ? STATUS.CONNECTED
-    : healthStatus === "starting" || healthStatus === "checking"
+    : healthStatus === "starting"
+      || healthStatus === "checking"
+      || (transport === "websocket" && serial_status === STATUS.CONNECTED)
       ? STATUS.AWAITING
       : STATUS.DISCONNECTED;
   const connectionData = transport === "serial"
