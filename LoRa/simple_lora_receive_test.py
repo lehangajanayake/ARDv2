@@ -13,6 +13,7 @@ FREQUENCY_MHZ = 915.0
 PACKET_FORMAT = "<BII3b3f3f3fH"
 PACKET_SIZE = struct.calcsize(PACKET_FORMAT)
 PACKET_MAGIC = 0xAA
+CRC_ENABLE_MASK = 0x04  # RegModemConfig2 bit 2
 
 
 class ReceiveOnlyLoRa(LoRa):
@@ -93,6 +94,10 @@ radio = ReceiveOnlyLoRa(
 try:
     version = radio._spi_read(getattr(rlc, "REG_42_VERSION", 0x42))
     print(f"Radio initialized. Version register: 0x{version:02X}")
+    modem_config_2_register = getattr(rlc, "REG_1E_MODEM_CONFIG_2", 0x1E)
+    modem_config_2 = radio._spi_read(modem_config_2_register)
+    radio._spi_write(modem_config_2_register, modem_config_2 | CRC_ENABLE_MASK)
+    print("CRC enabled to match the ESP32 sender")
     print("Waiting for packets. Press Ctrl+C to stop.")
     radio.set_mode_rx()
 
