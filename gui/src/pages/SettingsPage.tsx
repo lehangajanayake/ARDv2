@@ -73,7 +73,6 @@ export default function SettingsPage({
   const [maxHeightMessage, setMaxHeightMessage] = useState("");
   const readerRef = useRef<ReadableStreamDefaultReader | null>(null); 
   const websocketRef = useRef<WebSocket | null>(null);
-  const websocketBufferRef = useRef("");
   const streamStartTimeRef = useRef<number>(0);
   const replayTimerRef = useRef<number | null>(null);
 
@@ -215,7 +214,6 @@ export default function SettingsPage({
     try {
       const socket = new WebSocket(websocketUrl);
       websocketRef.current = socket;
-      websocketBufferRef.current = "";
       streamStartTimeRef.current = Date.now();
 
       socket.onopen = () => {
@@ -227,9 +225,7 @@ export default function SettingsPage({
         if (!text) return;
 
         setRawData((previous) => previous + text);
-        websocketBufferRef.current += text;
-        const lines = websocketBufferRef.current.split(/\r?\n/);
-        websocketBufferRef.current = lines.pop() || "";
+        const lines = text.split(/\r?\n/).filter((line) => line.trim().length > 0);
 
         for (const line of lines) {
           const packet = dataSource === "srad"
@@ -252,7 +248,6 @@ export default function SettingsPage({
 
       socket.onclose = () => {
         websocketRef.current = null;
-        websocketBufferRef.current = "";
         setPortStatus(STATUS.DISCONNECTED);
       };
     } catch (error) {

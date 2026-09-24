@@ -314,6 +314,7 @@ async def handle_health_request(reader: asyncio.StreamReader, writer: asyncio.St
 		headers = (
 			f"HTTP/1.1 {status}\r\n"
 			"Content-Type: application/json; charset=utf-8\r\n"
+			"Access-Control-Allow-Origin: *\r\n"
 			f"Content-Length: {len(body)}\r\n"
 			"Connection: close\r\n\r\n"
 		)
