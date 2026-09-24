@@ -1,5 +1,6 @@
 """Minimal receive-only test for the SX127x LoRa module."""
 
+import struct
 import time
 
 from raspi_lora import LoRa, ModemConfig
@@ -9,6 +10,9 @@ SPI_CHANNEL = 1       # CE1 / BCM GPIO7
 INTERRUPT_PIN = 18    # DIO0 / BCM GPIO18
 ADDRESS = 1
 FREQUENCY_MHZ = 915.0
+PACKET_FORMAT = "<BII3b3f3f3fH"
+PACKET_SIZE = struct.calcsize(PACKET_FORMAT)
+PACKET_MAGIC = 0xAA
 
 
 class ReceiveOnlyLoRa(LoRa):
@@ -44,7 +48,35 @@ class ReceiveOnlyLoRa(LoRa):
 
         print(f"Received {len(packet)} bytes")
         print(f"Raw bytes: {packet!r}")
-        print(f"Text: {packet.decode('ascii', errors='replace')!r}")
+
+        if len(packet) != PACKET_SIZE:
+            print(f"Ignoring packet: expected {PACKET_SIZE} bytes")
+            print("-" * 40)
+            return
+
+        values = struct.unpack(PACKET_FORMAT, packet)
+        header, packet_num, timestamp_ms = values[:3]
+        accel_h3lis = values[3:6]
+        imu_accel = values[6:9]
+        imu_gyro = values[9:12]
+        temperature_c, pressure_hpa, altitude_m, checksum = values[12:]
+
+        if header != PACKET_MAGIC:
+            print(f"Ignoring packet: expected header 0x{PACKET_MAGIC:02X}, got 0x{header:02X}")
+            print("-" * 40)
+            return
+
+        print("Decoded telemetry:")
+        print(f"  header:        0x{header:02X}")
+        print(f"  packet_num:    {packet_num}")
+        print(f"  timestamp_ms:  {timestamp_ms}")
+        print(f"  h3lis_accel:   {accel_h3lis}")
+        print(f"  imu_accel:     {imu_accel}")
+        print(f"  imu_gyro:      {imu_gyro}")
+        print(f"  temperature_C: {temperature_c:.2f}")
+        print(f"  pressure_hPa:  {pressure_hpa:.2f}")
+        print(f"  altitude_m:    {altitude_m:.2f}")
+        print(f"  checksum:      0x{checksum:04X}")
         print("-" * 40)
 
 
