@@ -37,6 +37,7 @@ RESET -> BCM GPIO12 / physical pin 32
 
 import argparse
 import asyncio
+import json
 import logging
 import time
 import traceback
@@ -54,6 +55,8 @@ logger = logging.getLogger("lora_receiver")
 received_packet_count = 0
 valid_packet_count = 0
 rejected_packet_count = 0
+started_at = 0.0
+radio_ready = False
 
 
 def is_telemetry_packet(line: str) -> bool:
@@ -92,6 +95,11 @@ def parse_arguments() -> argparse.Namespace:
 	parser.add_argument("--address", type=int, default=1, help="Unused by this receive-only build; kept for API compatibility with the LoRa constructor.")
 	parser.add_argument("--host", default="localhost")
 	parser.add_argument("--websocket-port", type=int, default=8765)
+	parser.add_argument(
+		"--health-host", default="0.0.0.0",
+		help="Interface for the HTTP health endpoint (default: all interfaces).",
+	)
+	parser.add_argument("--health-port", type=int, default=8080)
 	parser.add_argument(
 		"--debug",
 		action="store_true",
@@ -236,6 +244,49 @@ async def drain_telemetry(queue: "asyncio.Queue[str]") -> None:
 		await broadcast(line)
 
 
+async def handle_health_request(reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
+	"""Serve a small JSON health response over HTTP for service monitoring."""
+	try:
+		request = await asyncio.wait_for(reader.readline(), timeout=3)
+		parts = request.decode("ascii", errors="replace").strip().split()
+		# Consume headers so the connection can be closed cleanly.
+		while await asyncio.wait_for(reader.readline(), timeout=3) not in (b"\r\n", b"\n", b""):
+			pass
+
+		if len(parts) < 2 or parts[1].split("?", 1)[0] != "/health":
+			status, payload = "404 Not Found", {"status": "not_found"}
+		elif parts[0] != "GET":
+			status, payload = "405 Method Not Allowed", {"status": "method_not_allowed"}
+		else:
+			status = "200 OK" if radio_ready else "503 Service Unavailable"
+			payload = {
+				"status": "healthy" if radio_ready else "starting",
+				"radio_ready": radio_ready,
+				"uptime_seconds": round(time.monotonic() - started_at, 1),
+				"packets_received": received_packet_count,
+				"valid_packets": valid_packet_count,
+				"rejected_packets": rejected_packet_count,
+				"websocket_clients": len(connected_clients),
+			}
+		body = json.dumps(payload).encode("utf-8")
+		headers = (
+			f"HTTP/1.1 {status}\r\n"
+			"Content-Type: application/json; charset=utf-8\r\n"
+			f"Content-Length: {len(body)}\r\n"
+			"Connection: close\r\n\r\n"
+		)
+		writer.write(headers.encode("ascii") + body)
+		await writer.drain()
+	except (asyncio.TimeoutError, ConnectionError):
+		pass
+	finally:
+		writer.close()
+		try:
+			await writer.wait_closed()
+		except ConnectionError:
+			pass
+
+
 async def handle_client(websocket: Any, *_args: Any) -> None:
 	"""Register a read-only telemetry client; never receive commands."""
 	connected_clients.add(websocket)
@@ -249,6 +300,8 @@ async def handle_client(websocket: Any, *_args: Any) -> None:
 
 
 async def run(arguments: argparse.Namespace) -> None:
+	global started_at, radio_ready
+	started_at = time.monotonic()
 	logger.info(
 		"Starting LoRa receiver: frequency=%.3f MHz, SPI channel=%d, interrupt GPIO=%d, "
 		"reset GPIO=%s, WebSocket=%s:%d",
@@ -293,6 +346,7 @@ async def run(arguments: argparse.Namespace) -> None:
 		f"LoRa receive-only radio ready at {arguments.frequency} MHz; "
 		"transmit is disabled at the code level in this program."
 	)
+	radio_ready = True
 
 	try:
 		async with websockets.serve(
@@ -304,8 +358,19 @@ async def run(arguments: argparse.Namespace) -> None:
 				f"WebSocket telemetry server listening at "
 				f"ws://{arguments.host}:{arguments.websocket_port}"
 			)
-			await drain_telemetry(queue)
+			async with await asyncio.start_server(
+				handle_health_request,
+				arguments.health_host,
+				arguments.health_port,
+			):
+				logger.info(
+					"HTTP health endpoint listening at http://%s:%d/health",
+					arguments.health_host,
+					arguments.health_port,
+				)
+				await drain_telemetry(queue)
 	finally:
+		radio_ready = False
 		logger.info(
 			"Stopping receiver. RX packets=%d, valid telemetry=%d, rejected payloads=%d.",
 			received_packet_count,
@@ -329,6 +394,7 @@ def main() -> None:
 		logger.info("Receiver stopped by keyboard interrupt.")
 	except Exception:
 		logger.exception("Receiver stopped because of an unhandled error.")
+		raise
 
 
 if __name__ == "__main__":

@@ -74,6 +74,19 @@ The WebSocket endpoint is:
 ws://localhost:8765
 ```
 
+The HTTP health endpoint is available at:
+
+```text
+http://localhost:8080/health
+```
+
+When the frontend runs on another device, the health listener binds to all
+interfaces by default, so use `http://RASPBERRY_PI_IP:8080/health`. It returns
+HTTP `200` with JSON while the radio and receiver are ready, or `503` while
+starting or stopping. The response includes uptime, received/valid/rejected
+packet counts, and the number of connected WebSocket clients. Change its bind
+address or port with `--health-host` and `--health-port`.
+
 ## Run with debug logging
 
 Use debug mode when checking radio initialization, SPI wiring, interrupt activity, or packet validation:

@@ -88,9 +88,11 @@ Connect the inAir9B to the Raspberry Pi's 3.3 V SPI pins. The current receiver u
 Enable SPI with `sudo raspi-config` under **Interface Options**, then install the Python dependencies:
 
 ```bash
+cd LoRa
 python3 -m venv .venv
 source .venv/bin/activate
 pip install adafruit-blinka spidev raspi-lora==0.2 websockets
+cd ..
 ```
 
 Run the receiver on the Raspberry Pi:
@@ -112,6 +114,16 @@ Pass `--debug` to enable detailed radio, packet, and WebSocket diagnostics.
 It listens for 12-field numeric telemetry at 915 MHz and serves it at `ws://localhost:8765`. Use `--frequency 868` for an 868 MHz inAir9B and `--host 0.0.0.0` when the GUI runs on another computer. The receiver must use the same frequency and radio settings as the transmitter.
 
 The receiver contains no LoRa send call and no WebSocket command handling. Keep the inAir9B antenna connected whenever the transmitter is operating; receive-only software cannot protect a separate transmitter from antenna-less operation.
+
+View receiver logs with `journalctl -u ard-lora-receiver.service -f`. The service
+user must have access to SPI and GPIO devices; add it to the `gpio` and `spi`
+groups if those groups exist on the Raspberry Pi:
+
+```bash
+sudo usermod -aG gpio,spi pi
+```
+
+Log out and back in, or reboot, after changing group membership.
 
 ### ESP32 Serial Bridge
 
