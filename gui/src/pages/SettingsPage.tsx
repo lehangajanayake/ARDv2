@@ -109,15 +109,14 @@ export default function SettingsPage({
         return;
       }
 
-      setHealthStatus("checking");
       try {
         const response = await fetch(healthUrl, { signal: AbortSignal.timeout(3000) });
         const body = (await response.json()) as HealthResponse;
         if (!cancelled) {
           setHealthStatus(
-            response.ok && body.service_running && body.lora_connected
+            response.ok && body.lora_connected === true
               ? "healthy"
-              : response.ok && body.service_running
+              : response.ok
                 ? "starting"
                 : "unavailable",
           );
@@ -618,43 +617,51 @@ export default function SettingsPage({
       )}
 
       <div className={dataSource === "replay" ? "hidden" : "block"}>
-      <Select
-        value={selectedPort ? String(selectedPort.getInfo().usbProductId) : ""}
-        onValueChange={onSelectPort}
-      >
-        <SelectTrigger className="w-full text-black">
-          <SelectValue placeholder="Select a serial port" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            <SelectLabel>Serial Ports</SelectLabel>
-            {ports.map((port, i) => {
-              const info = port.getInfo();
-              const portId = String(info.usbProductId);
-              return (
-                <SelectItem key={i} value={portId}>
-                  USB PID: {portId} (VID: {info.usbVendorId})
-                </SelectItem>
-              );
-            })}
-          </SelectGroup>
-        </SelectContent>
-      </Select>
+      {transport === "serial" && (
+        <>
+          <Select
+            value={selectedPort ? String(selectedPort.getInfo().usbProductId) : ""}
+            onValueChange={onSelectPort}
+          >
+            <SelectTrigger className="w-full text-black">
+              <SelectValue placeholder="Select a serial port" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>Serial Ports</SelectLabel>
+                {ports.map((port, i) => {
+                  const info = port.getInfo();
+                  const portId = String(info.usbProductId);
+                  return (
+                    <SelectItem key={i} value={portId}>
+                      USB PID: {portId} (VID: {info.usbVendorId})
+                    </SelectItem>
+                  );
+                })}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </>
+      )}
 
       <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mt-4">
-        <Button
-          onClick={loadPorts}
-          className="bg-gray-700 hover:bg-gray-800 w-full sm:w-auto"
-        >
-          Load Serial Ports
-        </Button>
+        {transport === "serial" && (
+          <>
+            <Button
+              onClick={loadPorts}
+              className="bg-gray-700 hover:bg-gray-800 w-full sm:w-auto"
+            >
+              Load Serial Ports
+            </Button>
 
-        <Button
-          onClick={disconnectPort}
-          className="bg-gray-700 hover:bg-gray-800 w-full sm:w-auto"
-        >
-          Clear ports
-        </Button>
+            <Button
+              onClick={disconnectPort}
+              className="bg-gray-700 hover:bg-gray-800 w-full sm:w-auto"
+            >
+              Clear ports
+            </Button>
+          </>
+        )}
         <Button
           onClick={isConnected
             ? disconnectPort
