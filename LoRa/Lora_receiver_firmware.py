@@ -343,6 +343,8 @@ async def handle_client(websocket: Any, *_args: Any) -> None:
 
 async def run(arguments: argparse.Namespace) -> None:
 	global started_at, radio_ready, last_valid_packet_at
+	if arguments.mock_interval <= 0:
+		raise ValueError("--mock-interval must be greater than zero")
 	started_at = time.monotonic()
 	last_valid_packet_at = None
 	logger.info(
@@ -355,41 +357,50 @@ async def run(arguments: argparse.Namespace) -> None:
 		arguments.host,
 		arguments.websocket_port,
 	)
-	if arguments.reset_pin is not None:
+	if arguments.reset_pin is not None and not arguments.mock_telemetry:
 		pulse_reset(arguments.reset_pin)
 
 	loop = asyncio.get_running_loop()
 	queue: "asyncio.Queue[str]" = asyncio.Queue()
+	telemetry_callback = make_telemetry_callback(loop, queue)
+	radio: Optional[ReceiveOnlyLoRa] = None
+	mock_task: Optional[asyncio.Task[None]] = None
 
-	logger.info("Initializing raspi-lora and opening SPI/GPIO.")
-	try:
-		radio = ReceiveOnlyLoRa(
-			arguments.spi_channel,
-			arguments.interrupt_pin,
-			arguments.address,
-			freq=arguments.frequency,
-			tx_power=TX_POWER_FLOOR,
-			modem_config=ModemConfig.Bw125Cr45Sf128,  # 125 kHz, 4/5 coding, SF7 (matches original config)
-			acks=False,  # belt-and-suspenders: even though send_ack() is overridden to raise
-			on_telemetry=make_telemetry_callback(loop, queue),
+	if arguments.mock_telemetry:
+		logger.warning("Mock telemetry enabled; skipping LoRa hardware initialization.")
+		mock_task = asyncio.create_task(
+			send_mock_telemetry(telemetry_callback, arguments.mock_interval)
 		)
-		logger.info("LoRa object initialized successfully.")
-		version_register = getattr(rlc, "REG_42_VERSION", 0x42)
-		chip_version = radio._spi_read(version_register)
-		logger.info("SX127x version register 0x%02X returned 0x%02X.", version_register, chip_version)
-		logger.info("Setting radio to continuous receive mode.")
-		radio.set_mode_rx()
-	except Exception:
-		logger.exception(
-			"LoRa initialization failed. Check SPI enablement, NSS/SPI channel, "
-			"DIO0 interrupt GPIO, reset wiring, frequency, and power.",
+	else:
+		logger.info("Initializing raspi-lora and opening SPI/GPIO.")
+		try:
+			radio = ReceiveOnlyLoRa(
+				arguments.spi_channel,
+				arguments.interrupt_pin,
+				arguments.address,
+				freq=arguments.frequency,
+				tx_power=TX_POWER_FLOOR,
+				modem_config=ModemConfig.Bw125Cr45Sf128,
+				acks=False,
+				on_telemetry=telemetry_callback,
+			)
+			logger.info("LoRa object initialized successfully.")
+			version_register = getattr(rlc, "REG_42_VERSION", 0x42)
+			chip_version = radio._spi_read(version_register)
+			logger.info("SX127x version register 0x%02X returned 0x%02X.", version_register, chip_version)
+			logger.info("Setting radio to continuous receive mode.")
+			radio.set_mode_rx()
+		except Exception:
+			logger.exception(
+				"LoRa initialization failed. Check SPI enablement, NSS/SPI channel, "
+				"DIO0 interrupt GPIO, reset wiring, frequency, and power.",
+			)
+			raise
+		logger.info(
+			"LoRa receive-only radio ready at %.3f MHz; transmit is disabled at the code level in this program.",
+			arguments.frequency,
 		)
-		raise
-	logger.info(
-		f"LoRa receive-only radio ready at {arguments.frequency} MHz; "
-		"transmit is disabled at the code level in this program."
-	)
-	radio_ready = True
+		radio_ready = True
 
 	try:
 		async with websockets.serve(
@@ -413,6 +424,12 @@ async def run(arguments: argparse.Namespace) -> None:
 				)
 				await drain_telemetry(queue)
 	finally:
+		if mock_task is not None:
+			mock_task.cancel()
+			try:
+				await mock_task
+			except asyncio.CancelledError:
+				pass
 		radio_ready = False
 		logger.info(
 			"Stopping receiver. RX packets=%d, valid telemetry=%d, rejected payloads=%d.",
@@ -420,7 +437,8 @@ async def run(arguments: argparse.Namespace) -> None:
 			valid_packet_count,
 			rejected_packet_count,
 		)
-		radio.close()
+		if radio is not None:
+			radio.close()
 
 
 def main() -> None:
