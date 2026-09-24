@@ -103,11 +103,36 @@ def parse_arguments() -> argparse.Namespace:
 	)
 	parser.add_argument("--health-port", type=int, default=8080)
 	parser.add_argument(
+		"--mock-telemetry",
+		action="store_true",
+		help="Skip LoRa hardware initialization and periodically send mock SRAD telemetry.",
+	)
+	parser.add_argument(
+		"--mock-interval",
+		type=float,
+		default=1.0,
+		metavar="SECONDS",
+		help="Seconds between mock telemetry packets (default: 1.0).",
+	)
+	parser.add_argument(
 		"--debug",
 		action="store_true",
 		help="Enable detailed LoRa, packet, and WebSocket diagnostics.",
 	)
 	return parser.parse_args()
+
+
+async def send_mock_telemetry(callback: Any, interval: float) -> None:
+	"""Generate valid SRAD-shaped packets for end-to-end UI testing."""
+	sequence = 0
+	while True:
+		packet = (
+			f"{sequence},{20.0 + sequence % 5:.1f},1013.2,{100.0 + sequence:.1f},"
+			"0.1,0.2,1.0,0.0,0.0,0.0,-34.429494,139.600430"
+		).encode("ascii")
+		callback(packet)
+		sequence += 1
+		await asyncio.sleep(interval)
 
 
 def pulse_reset(reset_pin: int) -> None:
