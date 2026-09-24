@@ -49,6 +49,7 @@ from raspi_lora import constants as rlc
 
 TELEMETRY_FIELD_COUNT = 12
 TX_POWER_FLOOR = 5  # library's documented minimum; never actually used (see ReceiveOnlyLoRa)
+RECEIVING_TIMEOUT_SECONDS = 10
 
 connected_clients: set[Any] = set()
 logger = logging.getLogger("lora_receiver")
@@ -57,6 +58,7 @@ valid_packet_count = 0
 rejected_packet_count = 0
 started_at = 0.0
 radio_ready = False
+last_valid_packet_at: Optional[float] = None
 
 
 def is_telemetry_packet(line: str) -> bool:
@@ -194,11 +196,12 @@ def make_telemetry_callback(loop: asyncio.AbstractEventLoop, queue: "asyncio.Que
 	"""
 
 	def on_telemetry(packet: bytes) -> None:
-		global valid_packet_count, rejected_packet_count
+		global valid_packet_count, rejected_packet_count, last_valid_packet_at
 		try:
 			line = packet.decode("ascii", errors="ignore").strip()
 			if is_telemetry_packet(line):
 				valid_packet_count += 1
+				last_valid_packet_at = time.monotonic()
 				logger.debug(
 					"Valid telemetry packet #%d: %s",
 					valid_packet_count,
@@ -259,9 +262,23 @@ async def handle_health_request(reader: asyncio.StreamReader, writer: asyncio.St
 			status, payload = "405 Method Not Allowed", {"status": "method_not_allowed"}
 		else:
 			status = "200 OK" if radio_ready else "503 Service Unavailable"
+			now = time.monotonic()
+			last_packet_age = (
+				round(now - last_valid_packet_at, 1)
+				if last_valid_packet_at is not None
+				else None
+			)
+			receiving_data = (
+				radio_ready
+				and last_packet_age is not None
+				and last_packet_age <= RECEIVING_TIMEOUT_SECONDS
+			)
 			payload = {
-				"status": "healthy" if radio_ready else "starting",
+				"status": "running" if radio_ready else "starting",
+				"service_running": radio_ready,
+				"receiving_data": receiving_data,
 				"radio_ready": radio_ready,
+				"last_valid_packet_age_seconds": last_packet_age,
 				"uptime_seconds": round(time.monotonic() - started_at, 1),
 				"packets_received": received_packet_count,
 				"valid_packets": valid_packet_count,
@@ -300,8 +317,9 @@ async def handle_client(websocket: Any, *_args: Any) -> None:
 
 
 async def run(arguments: argparse.Namespace) -> None:
-	global started_at, radio_ready
+	global started_at, radio_ready, last_valid_packet_at
 	started_at = time.monotonic()
+	last_valid_packet_at = None
 	logger.info(
 		"Starting LoRa receiver: frequency=%.3f MHz, SPI channel=%d, interrupt GPIO=%d, "
 		"reset GPIO=%s, WebSocket=%s:%d",

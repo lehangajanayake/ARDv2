@@ -34,7 +34,9 @@ type SettingsPageProps = {
 type HealthStatus = "unknown" | "checking" | "healthy" | "starting" | "unavailable";
 
 type HealthResponse = {
-  status?: "healthy" | "starting";
+  status?: "running" | "starting";
+  service_running?: boolean;
+  receiving_data?: boolean;
 };
 
 export default function SettingsPage({
@@ -114,7 +116,13 @@ export default function SettingsPage({
         const response = await fetch(healthUrl, { signal: AbortSignal.timeout(3000) });
         const body = (await response.json()) as HealthResponse;
         if (!cancelled) {
-          setHealthStatus(response.ok && body.status === "healthy" ? "healthy" : "starting");
+          setHealthStatus(
+            response.ok && body.service_running && body.receiving_data
+              ? "healthy"
+              : response.ok && body.status === "running"
+                ? "starting"
+                : "starting",
+          );
         }
       } catch {
         if (!cancelled) {
