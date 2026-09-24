@@ -34,9 +34,8 @@ type SettingsPageProps = {
 type HealthStatus = "unknown" | "checking" | "healthy" | "starting" | "unavailable";
 
 type HealthResponse = {
-  status?: "running" | "starting";
   service_running?: boolean;
-  receiving_data?: boolean;
+  lora_connected?: boolean;
 };
 
 export default function SettingsPage({
@@ -117,11 +116,11 @@ export default function SettingsPage({
         const body = (await response.json()) as HealthResponse;
         if (!cancelled) {
           setHealthStatus(
-            response.ok && body.service_running && body.receiving_data
+            response.ok && body.service_running && body.lora_connected
               ? "healthy"
-              : response.ok && body.status === "running"
+              : response.ok && body.service_running
                 ? "starting"
-                : "starting",
+                : "unavailable",
           );
         }
       } catch {

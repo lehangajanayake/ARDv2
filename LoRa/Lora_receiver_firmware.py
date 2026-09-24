@@ -252,16 +252,17 @@ async def handle_health_request(reader: asyncio.StreamReader, writer: asyncio.St
 	try:
 		request = await asyncio.wait_for(reader.readline(), timeout=3)
 		parts = request.decode("ascii", errors="replace").strip().split()
+		request_target = parts[1].split("?", 1)[0].rstrip("/") if len(parts) >= 2 else ""
 		# Consume headers so the connection can be closed cleanly.
 		while await asyncio.wait_for(reader.readline(), timeout=3) not in (b"\r\n", b"\n", b""):
 			pass
 
-		if len(parts) < 2 or parts[1].split("?", 1)[0] != "/health":
+		if request_target != "/health":
 			status, payload = "404 Not Found", {"status": "not_found"}
 		elif parts[0] != "GET":
 			status, payload = "405 Method Not Allowed", {"status": "method_not_allowed"}
 		else:
-			status = "200 OK" if radio_ready else "503 Service Unavailable"
+			status = "200 OK"
 			now = time.monotonic()
 			last_packet_age = (
 				round(now - last_valid_packet_at, 1)
@@ -274,10 +275,9 @@ async def handle_health_request(reader: asyncio.StreamReader, writer: asyncio.St
 				and last_packet_age <= RECEIVING_TIMEOUT_SECONDS
 			)
 			payload = {
-				"status": "running" if radio_ready else "starting",
-				"service_running": radio_ready,
+				"service_running": True,
+				"lora_connected": radio_ready,
 				"receiving_data": receiving_data,
-				"radio_ready": radio_ready,
 				"last_valid_packet_age_seconds": last_packet_age,
 				"uptime_seconds": round(time.monotonic() - started_at, 1),
 				"packets_received": received_packet_count,
