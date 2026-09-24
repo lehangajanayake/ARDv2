@@ -39,7 +39,10 @@ const LeftPane = ({ data, serial_status, transport, healthStatus } : Props) => {
     ? [{ title: "Serial Port", status: serial_status }]
     : healthStatus === "unknown"
       ? []
-      : [{ title: "LoRa Receiver", status: receiverStatus }];
+      : [
+          { title: "WebSocket Server", status: serial_status },
+          { title: "LoRa Receiver", status: receiverStatus },
+        ];
 
   const metrics: TMetric[] = [
     { title: "Temperature", value: formatTelemetryValue(data.Temp), unit: "°C" },
