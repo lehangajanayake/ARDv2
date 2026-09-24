@@ -27,6 +27,14 @@ type SettingsPageProps = {
   setLaunchSite: React.Dispatch<React.SetStateAction<[number, number]>>;
   targetHeight: number;
   setTargetHeight: React.Dispatch<React.SetStateAction<number>>;
+  onTransportChange: (transport: "serial" | "websocket") => void;
+  onHealthStatusChange: (status: HealthStatus) => void;
+};
+
+type HealthStatus = "unknown" | "checking" | "healthy" | "starting" | "unavailable";
+
+type HealthResponse = {
+  status?: "healthy" | "starting";
 };
 
 export default function SettingsPage({
@@ -38,6 +46,8 @@ export default function SettingsPage({
   setLaunchSite,
   targetHeight,
   setTargetHeight,
+  onTransportChange,
+  onHealthStatusChange,
 }: SettingsPageProps) {
   const [ports, setPorts] = useState<SerialPort[]>([]);
   const [selectedPort, setSelectedPort] = useState<SerialPort | null>(null);
@@ -54,6 +64,7 @@ export default function SettingsPage({
   const [replayIndex, setReplayIndex] = useState(0);
   const [replayPlaying, setReplayPlaying] = useState(false);
   const [replaySpeed, setReplaySpeed] = useState(1);
+  const [healthStatus, setHealthStatus] = useState<HealthStatus>("unknown");
   const [launchLongitude, setLaunchLongitude] = useState(String(launchSite[0]));
   const [launchLatitude, setLaunchLatitude] = useState(String(launchSite[1]));
   const [launchSiteMessage, setLaunchSiteMessage] = useState("");
@@ -66,6 +77,61 @@ export default function SettingsPage({
   const replayTimerRef = useRef<number | null>(null);
 
   const isConnected = portStatus === STATUS.CONNECTED;
+  const isSradWebSocket = transport === "websocket" && dataSource === "srad";
+
+  useEffect(() => {
+    onHealthStatusChange(healthStatus);
+  }, [healthStatus, onHealthStatusChange]);
+
+  useEffect(() => {
+    if (!isSradWebSocket) {
+      setHealthStatus("unknown");
+      return;
+    }
+
+    let cancelled = false;
+    const healthUrl = (() => {
+      try {
+        const url = new URL(websocketUrl);
+        url.protocol = url.protocol === "wss:" ? "https:" : "http:";
+        url.port = "8080";
+        url.pathname = "/health";
+        url.search = "";
+        return url.toString();
+      } catch {
+        return null;
+      }
+    })();
+
+    const checkHealth = async () => {
+      if (!healthUrl) {
+        setHealthStatus("unavailable");
+        return;
+      }
+
+      setHealthStatus("checking");
+      try {
+        const response = await fetch(healthUrl, { signal: AbortSignal.timeout(3000) });
+        const body = (await response.json()) as HealthResponse;
+        if (!cancelled) {
+          setHealthStatus(response.ok && body.status === "healthy" ? "healthy" : "starting");
+        }
+      } catch {
+        if (!cancelled) {
+          setHealthStatus("unavailable");
+        }
+      }
+    };
+
+    void checkHealth();
+    const interval = window.setInterval(() => void checkHealth(), 5000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [isSradWebSocket, websocketUrl]);
+
   const loadPorts = useCallback(async () => {
     try {
       console.log("INFO: Requesting serial ports");
@@ -421,7 +487,10 @@ export default function SettingsPage({
         <div className="flex flex-col gap-2 sm:flex-row">
           <Button
             type="button"
-            onClick={() => setTransport("serial")}
+            onClick={() => {
+              setTransport("serial");
+              onTransportChange("serial");
+            }}
             disabled={isConnected}
             className={transport === "serial"
               ? "bg-yellow-500 text-white hover:bg-yellow-600"
@@ -431,7 +500,10 @@ export default function SettingsPage({
           </Button>
           <Button
             type="button"
-            onClick={() => setTransport("websocket")}
+            onClick={() => {
+              setTransport("websocket");
+              onTransportChange("websocket");
+            }}
             disabled={isConnected}
             className={transport === "websocket"
               ? "bg-yellow-500 text-white hover:bg-yellow-600"
@@ -601,6 +673,19 @@ export default function SettingsPage({
 
       <div className="mt-16">
       <p>Port Status: {portStatus}</p>
+        {isSradWebSocket && (
+          <p>
+            LoRa receiver: {healthStatus === "healthy"
+              ? "healthy"
+              : healthStatus === "starting"
+                ? "starting"
+                : healthStatus === "checking"
+                  ? "checking"
+                  : healthStatus === "unavailable"
+                    ? "unavailable"
+                    : "--"}
+          </p>
+        )}
 
         <p>Raw Serial Data:</p>
         <pre className="mt-2 p-2 bg-gray-100 text-sm overflow-auto h-40 text-blue-900">

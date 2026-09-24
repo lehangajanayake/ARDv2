@@ -13,6 +13,12 @@ import backgroundImageFile from '@/assets/background-cropped.png';
 function App() {
   const [page, setPage] = useState<PAGE>(PAGE.SETTINGS);
   const [portStatus, setPortStatus] = useState<STATUS>(STATUS.DISCONNECTED);
+  const [transport, setTransport] = useState<"serial" | "websocket">(
+    DEFAULT_CONFIG.connection.transport,
+  );
+  const [healthStatus, setHealthStatus] = useState<
+    "unknown" | "checking" | "healthy" | "starting" | "unavailable"
+  >("unknown");
   const [telemetryData, setTelemetryData] = useState<Telemetry[]>([
     DEFAULT_TELEMETRY_DATA,
   ]);
@@ -40,6 +46,8 @@ function App() {
       setLaunchSite={setLaunchSite}
       targetHeight={targetHeight}
       setTargetHeight={setTargetHeight}
+      onTransportChange={setTransport}
+      onHealthStatusChange={setHealthStatus}
     />
   );
 
@@ -95,7 +103,12 @@ function App() {
       >
         <div className="flex flex-row h-full">
           <div className="px-8 lg:px-16 py-8">
-            <LeftPane data={latest} serial_status={portStatus} />
+            <LeftPane
+              data={latest}
+              serial_status={portStatus}
+              transport={transport}
+              healthStatus={healthStatus}
+            />
           </div>
           <div className="scrollbar-hidden flex-1 overflow-y-auto px-4 sm:px-6 md:px-8">
             <div className={page === PAGE.SETTINGS ? "contents" : "hidden"}>

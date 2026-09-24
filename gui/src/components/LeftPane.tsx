@@ -22,13 +22,22 @@ const getLabelColor = (status: STATUS): string => labelColors[status];
 interface Props {
   data: Telemetry;
   serial_status: STATUS;
+  transport: "serial" | "websocket";
+  healthStatus: "unknown" | "checking" | "healthy" | "starting" | "unavailable";
 }
 
-const LeftPane = ({ data, serial_status} : Props) => {
+const LeftPane = ({ data, serial_status, transport, healthStatus } : Props) => {
 
-  const connectionData = [
-    { title: "Serial Port", status: serial_status },
-  ];
+  const receiverStatus: STATUS = healthStatus === "healthy"
+    ? STATUS.CONNECTED
+    : healthStatus === "starting" || healthStatus === "checking"
+      ? STATUS.AWAITING
+      : STATUS.DISCONNECTED;
+  const connectionData = transport === "serial"
+    ? [{ title: "Serial Port", status: serial_status }]
+    : healthStatus === "unknown"
+      ? []
+      : [{ title: "LoRa Receiver", status: receiverStatus }];
 
   const metrics: TMetric[] = [
     { title: "Temperature", value: formatTelemetryValue(data.Temp), unit: "°C" },
