@@ -11,7 +11,7 @@ function GyroRocketViewer({ data }: { data: RocketData }) {
 					<ambientLight intensity={1.5} />
 					<directionalLight position={[3, 4, 5]} intensity={2} />
 					<Suspense fallback={null}>
-						<RocketModel data={data} modelScale={1} />
+						<RocketModel data={data} modelScale={1.5} />
 					</Suspense>
 					<OrbitControls enablePan={false} enableZoom={false} />
 				</Canvas>
