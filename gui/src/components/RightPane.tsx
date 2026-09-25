@@ -10,9 +10,10 @@ interface Props {
   data: Telemetry;
   history: Telemetry[];
   targetHeight: number;
+  showGyro: boolean;
 }
 
-const RightPane = ({ data, history, targetHeight }: Props) => {
+const RightPane = ({ data, history, targetHeight, showGyro }: Props) => {
   const accelerationMetrics = [
     { title: "Acceleration X", value: data.accX, unit: "m/s²", max: 10 },
     { title: "Acceleration Y", value: data.accY, unit: "m/s²", max: 10 },
@@ -20,10 +21,10 @@ const RightPane = ({ data, history, targetHeight }: Props) => {
   ];
 
   return (
-    <div className="w-full max-w-xs space-y-14">
-      <div className="space-y-8">
+    <div className="flex h-full min-h-0 w-full max-w-xs flex-col items-center gap-10">
+      <div className="w-full space-y-6">
         {accelerationMetrics.map((item, index) => (
-          <div key={index} className="flex justify-between items-end">
+          <div key={index} className="flex w-full items-end justify-center gap-5">
             <div className="flex flex-col space-y-2">
               <span className="text-md text-gray-300">{item.title}</span>
               <div className="relative w-36 h-1.5">
@@ -34,26 +35,32 @@ const RightPane = ({ data, history, targetHeight }: Props) => {
                 ></div>
               </div>
             </div>
-            <div className="pl-6 text-lg text-white whitespace-nowrap">
+            <div className="text-lg text-white whitespace-nowrap">
               {formatTelemetryValue(item.value)} {item.unit}
             </div>
           </div>
         ))}
       </div>
+        
+      <div className="w-full shrink-0">
+        <TelemetryPlot
+          data={history}
+          title="Altitude"
+          dataKey="altitude"
+          color="#ffbd2e"
+          referenceValue={targetHeight}
+          referenceLabel="Target"
+          xAxisLabel="Time (s)"
+          yAxisLabel="Altitude (ft)"
+          yAxisUnit="ft"
+        />
+      </div>
 
-      <TelemetryPlot
-        data={history}
-        title="Altitude"
-        dataKey="altitude"
-        color="#ffbd2e"
-        referenceValue={targetHeight}
-        referenceLabel="Target"
-        xAxisLabel="Time (s)"
-        yAxisLabel="Altitude (ft)"
-        yAxisUnit="ft"
-      />
-
-      <Gyro data={data} />
+      {showGyro && (
+        <div className="w-full shrink-0">
+          <Gyro data={data} />
+        </div>
+      )}
 
     </div>
   );

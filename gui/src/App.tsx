@@ -32,7 +32,6 @@ function App() {
 
   const latest =
     telemetryData[telemetryData.length - 1] || DEFAULT_TELEMETRY_DATA;
-  const rotationAngle = latest.gyroZ ?? 0;
   const time = latest.time;
   const altitude = latest.altitude;
 
@@ -62,9 +61,11 @@ function App() {
       default:
         return (
           <TelemetryPage
-            rotationAngle={rotationAngle}
             time={time}
             altitude={altitude}
+            gyroX={latest.gyroX}
+            gyroY={latest.gyroY}
+            gyroZ={latest.gyroZ}
           />
         );
     }
@@ -110,14 +111,19 @@ function App() {
               healthStatus={healthStatus}
             />
           </div>
-          <div className="scrollbar-hidden flex-1 overflow-y-auto px-4 sm:px-6 md:px-8">
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 sm:px-6 md:px-8">
             <div className={page === PAGE.SETTINGS ? "contents" : "hidden"}>
               {settingsView}
             </div>
             {renderView()}
           </div>
           <div className="px-8 lg:px-16 py-8">
-            <RightPane data={latest} history={telemetryData} targetHeight={targetHeight} />
+            <RightPane
+              data={latest}
+              history={telemetryData}
+              targetHeight={targetHeight}
+              showGyro={page !== PAGE.TELEMETRY}
+            />
           </div>
         </div>
       </div>
