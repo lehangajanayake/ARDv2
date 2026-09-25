@@ -98,7 +98,7 @@ function App() {
           <div className="px-8 lg:px-16 py-8">
             <LeftPane data={latest} serial_status={portStatus} />
           </div>
-          <div className="flex-1 px-4 sm:px-6 md:px-8 overflow-y-auto">
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 sm:px-6 md:px-8">
             <div className={page === PAGE.SETTINGS ? "contents" : "hidden"}>
               {settingsView}
             </div>

@@ -2,7 +2,7 @@ import { Component, type ReactNode } from "react";
 import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { Box3, Group, Vector3 } from "three";
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import { Telemetry } from "../types";
 
 const modelPath = "/models/rocket.glb";
@@ -20,7 +20,14 @@ export function RocketModel({
 }) {
 	const { scene } = useGLTF(modelPath);
 	const toAngle = (value: number | null) => Math.tanh((value ?? 0) / 90) * Math.PI;
-	const modelCenter = new Box3().setFromObject(scene).getCenter(new Vector3());
+	const modelCenter = useMemo(() => {
+		const model = scene.clone(true);
+		model.position.set(0, 0, 0);
+		model.rotation.set(0, 0, 0);
+		model.scale.set(1, 1, 1);
+		model.updateMatrixWorld(true);
+		return new Box3().setFromObject(model).getCenter(new Vector3());
+	}, [scene]);
 	const rotationGroup = useRef<Group>(null);
 
 	useFrame((state) => {
@@ -38,7 +45,7 @@ export function RocketModel({
 			ref={rotationGroup}
 			rotation={preview ? [0, 0, 0] : [toAngle(data.gyroY), toAngle(data.gyroZ), toAngle(data.gyroX)]}
 		>
-			<group position={[-modelCenter.x, -modelCenter.y, -modelCenter.z]}>
+			<group position={[-modelCenter.x * modelScale, -modelCenter.y * modelScale, -modelCenter.z * modelScale]}>
 				<primitive object={scene} scale={modelScale} />
 			</group>
 		</group>

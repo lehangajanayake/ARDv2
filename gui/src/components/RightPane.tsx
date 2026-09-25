@@ -21,10 +21,10 @@ const RightPane = ({ data, history, targetHeight, showGyro }: Props) => {
   ];
 
   return (
-    <div className="relative h-full w-full max-w-xs space-y-14">
-      <div className="space-y-8">
+    <div className="flex h-full min-h-0 w-full max-w-xs flex-col items-center gap-10">
+      <div className="w-full space-y-6">
         {accelerationMetrics.map((item, index) => (
-          <div key={index} className="flex justify-between items-end">
+          <div key={index} className="flex w-full items-end justify-center gap-5">
             <div className="flex flex-col space-y-2">
               <span className="text-md text-gray-300">{item.title}</span>
               <div className="relative w-36 h-1.5">
@@ -35,27 +35,29 @@ const RightPane = ({ data, history, targetHeight, showGyro }: Props) => {
                 ></div>
               </div>
             </div>
-            <div className="pl-6 text-lg text-white whitespace-nowrap">
+            <div className="text-lg text-white whitespace-nowrap">
               {formatTelemetryValue(item.value)} {item.unit}
             </div>
           </div>
         ))}
       </div>
-
-      <TelemetryPlot
-        data={history}
-        title="Altitude"
-        dataKey="altitude"
-        color="#ffbd2e"
-        referenceValue={targetHeight}
-        referenceLabel="Target"
-        xAxisLabel="Time (s)"
-        yAxisLabel="Altitude (ft)"
-        yAxisUnit="ft"
-      />
+        
+      <div className="w-full shrink-0">
+        <TelemetryPlot
+          data={history}
+          title="Altitude"
+          dataKey="altitude"
+          color="#ffbd2e"
+          referenceValue={targetHeight}
+          referenceLabel="Target"
+          xAxisLabel="Time (s)"
+          yAxisLabel="Altitude (ft)"
+          yAxisUnit="ft"
+        />
+      </div>
 
       {showGyro && (
-        <div className="absolute right-0 top-[clamp(18rem,34vh,24rem)] w-full">
+        <div className="w-full shrink-0">
           <Gyro data={data} />
         </div>
       )}

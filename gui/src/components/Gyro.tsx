@@ -7,7 +7,7 @@ interface Props {
 
 function Gyro({ data }: Props) {
 	return (
-		<div className="flex w-full flex-col items-center">
+		<div className="flex w-full flex-col items-center ">
 			<h2 className="text-center text-gray-300 text-sm sm:text-base">
 				Rocket Gyro Axes
 			</h2>
