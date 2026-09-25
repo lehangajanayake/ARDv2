@@ -11,7 +11,7 @@ import { DEFAULT_CONFIG } from "./config";
 import backgroundImageFile from '@/assets/background-cropped.png';
 
 function App() {
-  const [page, setPage] = useState<PAGE>(PAGE.SETTINGS);
+  const [page, setPage] = useState<PAGE>(PAGE.TELEMETRY);
   const [portStatus, setPortStatus] = useState<STATUS>(STATUS.DISCONNECTED);
   const [transport, setTransport] = useState<"serial" | "websocket">(
     DEFAULT_CONFIG.connection.transport,
