@@ -10,9 +10,10 @@ interface Props {
   data: Telemetry;
   history: Telemetry[];
   targetHeight: number;
+  showGyro: boolean;
 }
 
-const RightPane = ({ data, history, targetHeight }: Props) => {
+const RightPane = ({ data, history, targetHeight, showGyro }: Props) => {
   const accelerationMetrics = [
     { title: "Acceleration X", value: data.accX, unit: "m/s²", max: 10 },
     { title: "Acceleration Y", value: data.accY, unit: "m/s²", max: 10 },
@@ -20,7 +21,7 @@ const RightPane = ({ data, history, targetHeight }: Props) => {
   ];
 
   return (
-    <div className="w-full max-w-xs space-y-14">
+    <div className="relative h-full w-full max-w-xs space-y-14">
       <div className="space-y-8">
         {accelerationMetrics.map((item, index) => (
           <div key={index} className="flex justify-between items-end">
@@ -53,7 +54,11 @@ const RightPane = ({ data, history, targetHeight }: Props) => {
         yAxisUnit="ft"
       />
 
-      <Gyro data={data} />
+      {showGyro && (
+        <div className="absolute right-0 top-[clamp(18rem,34vh,24rem)] w-full">
+          <Gyro data={data} />
+        </div>
+      )}
 
     </div>
   );

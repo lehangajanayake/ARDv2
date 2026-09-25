@@ -1,23 +1,26 @@
 import { Metric } from "@/components/Metric";
+import TelemetryRocketViewer from "@/components/TelemetryRocketViewer";
 import { formatTelemetryValue } from "@/types";
-import rocketImage from '@/assets/rocket.png';
 
 function TelemetryPage({
-    rotationAngle,
     time,
     altitude,
+    gyroX,
+    gyroY,
+    gyroZ,
 }: {
-    rotationAngle: number;
     time: number | null;
     altitude: number | null;
+    gyroX: number | null;
+    gyroY: number | null;
+    gyroZ: number | null;
 }) {
     return (
-        <div className="relative w-full min-h-screen flex items-center justify-center overflow-hidden">
+        <div className="relative h-full min-h-0 w-full flex items-center justify-center overflow-hidden">
             <div className="absolute top-12 z-10 flex justify-center w-full">
                 <div className="grid grid-cols-2 gap-x-[25rem] px-4 sm:px-8 md:px-16">
-                    <Metric large metrics={{ title: "Time", value: formatTelemetryValue(time), unit: "s" }} />
+                    <Metric metrics={{ title: "Time", value: formatTelemetryValue(time), unit: "s" }} />
                     <Metric
-                        large
                         metrics={{
                             title: "Altitude",
                             value: formatTelemetryValue(altitude),
@@ -28,12 +31,9 @@ function TelemetryPage({
             </div>
 
             
-            <img
-                className="relative z-0 w-[16vh] max-w-full h-auto"
-                src={rocketImage}
-                alt="Rocket"
-                style={{ transform: `translateY(-5px) rotate(${rotationAngle}deg)` }}
-            />
+            <div className="absolute left-1/2 top-[clamp(8rem,20vh,14rem)] z-0 w-[min(62vw,30rem)] -translate-x-1/2">
+                <TelemetryRocketViewer data={{ gyroX, gyroY, gyroZ }} />
+            </div>
         </div>
     );
 }
